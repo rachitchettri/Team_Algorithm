@@ -2,17 +2,16 @@ import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import PI from "../assets/images/logo.jpg";
 import { motion, AnimatePresence } from "framer-motion";
-import Course from "../components/course/course";
+import { useAuth } from "../components/Context/authContext";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [showSignUpForm, setShowSignUpForm] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [activeLink, setActiveLink] = useState("home");
   const [showBackToTop, setShowBackToTop] = useState(false);
-  const [isHoveringLogo, setIsHoveringLogo] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const { currentUser, logout, loading: authLoading } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -29,65 +28,50 @@ const Navbar = () => {
             break;
           }
         }
+      } else {
+        const pathSegments = location.pathname.split('/');
+        const currentPathSegment = pathSegments[1];
+        setActiveLink(currentPathSegment || "home");
       }
     };
 
-    const path = location.pathname.substring(1);
-    setActiveLink(path || "home");
+    const initialPathSegments = location.pathname.split('/');
+    const initialPathSegment = initialPathSegments[1];
+    setActiveLink(initialPathSegment || "home");
 
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, [location.pathname]);
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
-  const handleOpenSignUpForm = () => {
-    setShowSignUpForm(true);
-    setIsMenuOpen(false);
-    document.body.style.overflow = "hidden";
-  };
-  const handleCloseSignUpForm = () => {
-    setShowSignUpForm(false);
-    document.body.style.overflow = "auto";
-  };
-
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
+  const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
   const scrollToSection = (sectionId) => {
-    if (location.pathname === "/") {
-      const element = document.getElementById(sectionId);
-      if (element) {
-        element.scrollIntoView({
-          behavior: "smooth",
-          block: "start",
-        });
-      }
-    } else {
+    if (location.pathname !== "/") {
       navigate(`/#${sectionId}`);
       setTimeout(() => {
         const element = document.getElementById(sectionId);
-        if (element) {
-          element.scrollIntoView({
-            behavior: "smooth",
-            block: "start",
-          });
-        }
+        if (element) element.scrollIntoView({ behavior: "smooth", block: "start" });
       }, 100);
+    } else {
+      const element = document.getElementById(sectionId);
+      if (element) element.scrollIntoView({ behavior: "smooth", block: "start" });
     }
     setIsMenuOpen(false);
   };
 
   const navItems = [
-    { name: "Home", path: "/", section: "home" },
-    { name: "About", path: "/about", section: "about" },
-    { name: "Course", path: "/course", section: "course" },
-    { name: "Gallery", path: "/gallery", section: "gallery" },
-    { name: "Contact", path: "/contact", section: "contact" },
+    { name: "Home", route: "/", section: "home" },
+    { name: "About", route: "/", section: "about" },
+    { name: "Courses", route: "/courses" },
+    { name: "Jobs", route: "/recommended-jobs" },
+    { name: "Events", route: "/events" },
+    { name: "Gallery", route: "/", section: "gallery" },
+    { name: "Contact", route: "/", section: "contact" },
   ];
 
   const menuVariants = {
-    open: {
+    open: { 
       x: 0,
       opacity: 1,
       transition: {
@@ -122,166 +106,243 @@ const Navbar = () => {
     closed: {
       opacity: 0,
       x: 50,
-      transition: {
-        duration: 0.2,
-      },
+      transition: { duration: 0.2 },
     },
   };
 
-  const logoVariants = {
-    initial: { rotate: 0 },
-    animate: { rotate: isHoveringLogo ? 360 : 0 },
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/login');
+    } catch (error) {
+      console.error("Failed to logout:", error);
+    }
   };
 
   return (
     <>
-      {/* Navbar container */}
       <nav
-        className={`fixed  top-0 left-0 right-0 z-50 bg-white shadow-lg transition-all duration-300 ${
-          scrolled ? "py-2 shadow-purple-500/30" : "py-4"
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+          scrolled 
+            ? "bg-white shadow-lg py-2 border-b border-purple-100"
+            : "bg-gradient-to-b from-purple-900 to-purple-800 py-4"
         }`}
       >
-        <div className="container mx-auto flex items-center justify-between px-6">
-          {/* Logo */}
-          <motion.div
-            className="flex items-center cursor-pointer select-none"
-          >
-            <img
-              src={PI}
-              alt="Logo"
-              className="w-12 h-12 rounded-full border-2 border-purple-600"
-            />
-            <span className="ml-3 text-2xl font-extrabold text-purple-700 ">
-              Leap & Learn
-            </span>
-          </motion.div>
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            {/* Logo */}
+            <motion.div
+              className="flex items-center cursor-pointer"
+              onClick={() => navigate('/')}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <img
+                src={PI}
+                alt="Logo"
+                className="w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 border-white"
+              />
+              <span className={`ml-3 text-xl sm:text-2xl font-bold ${
+                scrolled ? "text-purple-800" : "text-white"
+              }`}>
+                Leap & Learn
+              </span>
+            </motion.div>
 
-          {/* Desktop Menu */}
-          <ul className="hidden md:flex space-x-10 text-purple-700 font-semibold tracking-wide">
-            {navItems.map(({ name, path, section }) => (
-              <li key={name}>
-                {path === "/" ? (
-                  <button
-                    onClick={() => scrollToSection(section)}
-                    className={`relative group focus:outline-none ${
-                      activeLink === section
-                        ? "text-purple-900 font-bold"
-                        : "hover:text-purple-800"
-                    }`}
-                  >
-                    {name}
-                    <span
-                      className={`block h-0.5 bg-purple-600 rounded mt-1 max-w-0 group-hover:max-w-full transition-all duration-300 ${
-                        activeLink === section ? "max-w-full" : ""
+            {/* Desktop Menu */}
+            <div className="hidden md:flex items-center space-x-1">
+              {navItems.map((item) => (
+                <div key={item.name} className="relative group">
+                  {item.section ? (
+                    <button
+                      onClick={() => scrollToSection(item.section)}
+                      className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                        (activeLink === item.section && location.pathname === '/')
+                          ? "text-white bg-purple-600"
+                          : scrolled 
+                            ? "text-purple-700 hover:bg-purple-50"
+                            : "text-purple-100 hover:bg-purple-700 hover:bg-opacity-30"
                       }`}
-                    />
+                    >
+                      {item.name}
+                    </button>
+                  ) : (
+                    <Link
+                      to={item.route}
+                      className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                        activeLink === item.route.substring(1) || (activeLink === 'home' && item.route === '/')
+                          ? "text-white bg-purple-600"
+                          : scrolled 
+                            ? "text-purple-700 hover:bg-purple-50"
+                            : "text-purple-100 hover:bg-purple-700 hover:bg-opacity-30"
+                      }`}
+                    >
+                      {item.name}
+                    </Link>
+                  )}
+                </div>
+              ))}
+              
+              {!authLoading && (
+                currentUser ? (
+                  <button
+                    onClick={handleLogout}
+                    className="ml-2 px-4 py-2 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition-colors shadow-md"
+                  >
+                    Logout
                   </button>
                 ) : (
-                  <Link
-                    to={path}
-                    className={`relative group focus:outline-none ${
-                      activeLink === section
-                        ? "text-purple-900 font-bold"
-                        : "hover:text-purple-800"
-                    }`}
-                  >
-                    {name}
-                    <span
-                      className={`block h-0.5 bg-purple-600 rounded mt-1 max-w-0 group-hover:max-w-full transition-all duration-300 ${
-                        activeLink === section ? "max-w-full" : ""
-                      }`}
-                    />
-                  </Link>
-                )}
-              </li>
-            ))}
-            <li>
-              <button
-                onClick={handleOpenSignUpForm}
-                className="bg-purple-600 text-white px-5 py-2 rounded-lg shadow-md hover:bg-purple-700 transition duration-300"
-              >
-                Sign Up
-              </button>
-            </li>
-          </ul>
+                  <>
+                    <Link
+                      to="/login"
+                      className="ml-2 px-4 py-2 bg-white text-purple-700 rounded-lg font-medium hover:bg-purple-50 transition-colors shadow-md"
+                    >
+                      Login
+                    </Link>
+                    <Link
+                      to="/register"
+                      className="ml-2 px-4 py-2 bg-purple-500 text-white rounded-lg font-medium hover:bg-purple-600 transition-colors shadow-md"
+                    >
+                      Sign Up
+                    </Link>
+                  </>
+                )
+              )}
+            </div>
 
-          {/* Mobile menu button */}
-          <button
-            className="md:hidden text-purple-700 focus:outline-none"
-            onClick={toggleMenu}
-            aria-label="Toggle menu"
-          >
-            {isMenuOpen ? (
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            ) : (
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            )}
-          </button>
+            {/* Mobile menu button */}
+            <button
+              className={`md:hidden p-2 rounded-md focus:outline-none ${
+                scrolled ? "text-purple-700" : "text-white"
+              }`}
+              onClick={toggleMenu}
+              aria-label="Toggle menu"
+            >
+              {isMenuOpen ? (
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              ) : (
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              )}
+            </button>
+          </div>
         </div>
 
         {/* Mobile Menu */}
         <AnimatePresence>
           {isMenuOpen && (
-            <motion.ul
-              className="fixed top-0 right-0 h-full w-64 bg-white shadow-2xl flex flex-col p-8 space-y-8 md:hidden border-l-4 border-purple-600"
-              initial="closed"
-              animate="open"
-              exit="closed"
-              variants={menuVariants}
+            <motion.div
+              className="fixed inset-0 z-40 md:hidden"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsMenuOpen(false)}
             >
-              {navItems.map(({ name, path, section }) => (
-                <motion.li
-                  key={name}
-                  variants={itemVariants}
-                  className="text-purple-700 font-semibold text-lg"
-                >
-                  {path === "/" ? (
+              <motion.div
+                className="absolute top-0 right-0 w-64 h-full bg-white shadow-xl"
+                initial="closed"
+                animate="open"
+                exit="closed"
+                variants={menuVariants}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex flex-col h-full p-4">
+                  <div className="flex items-center justify-between p-4 border-b border-purple-100">
+                    <div className="flex items-center">
+                      <img
+                        src={PI}
+                        alt="Logo"
+                        className="w-10 h-10 rounded-full border-2 border-purple-600"
+                      />
+                      <span className="ml-3 text-xl font-bold text-purple-800">
+                        Leap & Learn
+                      </span>
+                    </div>
                     <button
-                      onClick={() => scrollToSection(section)}
-                      className={`w-full text-left focus:outline-none ${
-                        activeLink === section ? "text-purple-900 font-bold" : "hover:text-purple-800"
-                      }`}
-                    >
-                      {name}
-                    </button>
-                  ) : (
-                    <Link
-                      to={path}
+                      className="p-1 rounded-md text-purple-700 hover:bg-purple-100"
                       onClick={() => setIsMenuOpen(false)}
-                      className={`block w-full focus:outline-none ${
-                        activeLink === section ? "text-purple-900 font-bold" : "hover:text-purple-800"
-                      }`}
                     >
-                      {name}
-                    </Link>
-                  )}
-                </motion.li>
-              ))}
-              <motion.li variants={itemVariants}>
-                <button
-                  onClick={handleOpenSignUpForm}
-                  className="bg-purple-600 text-white px-5 py-2 rounded-lg shadow-md hover:bg-purple-700 w-full transition duration-300"
-                >
-                  Sign Up
-                </button>
-              </motion.li>
-            </motion.ul>
+                      <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                  
+                  <div className="flex-1 overflow-y-auto py-4">
+                    {navItems.map((item) => (
+                      <motion.div
+                        key={item.name}
+                        variants={itemVariants}
+                        className="px-4 py-3"
+                      >
+                        {item.section ? (
+                          <button
+                            onClick={() => scrollToSection(item.section)}
+                            className={`w-full text-left py-2 px-3 rounded-lg ${
+                              (activeLink === item.section && location.pathname === '/')
+                                ? "bg-purple-100 text-purple-800 font-medium"
+                                : "text-purple-700 hover:bg-purple-50"
+                            }`}
+                          >
+                            {item.name}
+                          </button>
+                        ) : (
+                          <Link
+                            to={item.route}
+                            onClick={() => setIsMenuOpen(false)}
+                            className={`block w-full py-2 px-3 rounded-lg ${
+                              activeLink === item.route.substring(1) || (activeLink === 'home' && item.route === '/')
+                                ? "bg-purple-100 text-purple-800 font-medium"
+                                : "text-purple-700 hover:bg-purple-50"
+                            }`}
+                          >
+                            {item.name}
+                          </Link>
+                        )}
+                      </motion.div>
+                    ))}
+                  </div>
+                  
+                  <div className="p-4 border-t border-purple-100">
+                    {!authLoading && (
+                      currentUser ? (
+                        <motion.button
+                          variants={itemVariants}
+                          onClick={handleLogout}
+                          className="w-full py-2 px-4 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition-colors shadow-md"
+                        >
+                          Logout
+                        </motion.button>
+                      ) : (
+                        <>
+                          <motion.div variants={itemVariants} className="mb-3">
+                            <Link
+                              to="/login"
+                              onClick={() => setIsMenuOpen(false)}
+                              className="block w-full py-2 px-4 bg-purple-600 text-white rounded-lg font-medium text-center hover:bg-purple-700 transition-colors shadow-md"
+                            >
+                              Login
+                            </Link>
+                          </motion.div>
+                          <motion.div variants={itemVariants}>
+                            <Link
+                              to="/register"
+                              onClick={() => setIsMenuOpen(false)}
+                              className="block w-full py-2 px-4 bg-white text-purple-700 border border-purple-300 rounded-lg font-medium text-center hover:bg-purple-50 transition-colors shadow-md"
+                            >
+                              Sign Up
+                            </Link>
+                          </motion.div>
+                        </>
+                      )
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            </motion.div>
           )}
         </AnimatePresence>
       </nav>
@@ -291,67 +352,18 @@ const Navbar = () => {
         {showBackToTop && (
           <motion.button
             onClick={scrollToTop}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-            className="fixed bottom-6 right-6 p-3 rounded-full bg-purple-600 text-white shadow-lg hover:bg-purple-700 focus:outline-none transition duration-300"
+            initial={{ opacity: 0, scale: 0.5 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.5 }}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            className="fixed bottom-6 right-6 p-3 rounded-full bg-purple-600 text-white shadow-lg hover:bg-purple-700 focus:outline-none transition-all duration-300 z-40"
             aria-label="Back to top"
           >
-            ↑
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+            </svg>
           </motion.button>
-        )}
-      </AnimatePresence>
-
-      {/* Sign Up Modal */}
-      <AnimatePresence>
-        {showSignUpForm && (
-          <motion.div
-            className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={handleCloseSignUpForm}
-          >
-            <motion.div
-              className="bg-white rounded-xl p-10 max-w-md w-full relative shadow-2xl"
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.8, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <button
-                onClick={handleCloseSignUpForm}
-                className="absolute top-4 right-4 text-purple-700 hover:text-purple-900 text-3xl font-bold focus:outline-none"
-                aria-label="Close sign up form"
-              >
-                &times;
-              </button>
-              <h2 className="text-3xl font-bold mb-6 text-purple-800 text-center">Sign Up</h2>
-              <form className="space-y-6">
-                <input
-                  type="text"
-                  placeholder="Name"
-                  className="w-full border border-purple-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-600"
-                />
-                <input
-                  type="email"
-                  placeholder="Email"
-                  className="w-full border border-purple-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-600"
-                />
-                <input
-                  type="password"
-                  placeholder="Password"
-                  className="w-full border border-purple-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-600"
-                />
-                <button
-                  type="submit"
-                  className="w-full bg-purple-600 text-white py-3 rounded-lg hover:bg-purple-700 transition duration-300 font-semibold"
-                >
-                  Register
-                </button>
-              </form>
-            </motion.div>
-          </motion.div>
         )}
       </AnimatePresence>
     </>
