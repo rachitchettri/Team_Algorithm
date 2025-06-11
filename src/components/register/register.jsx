@@ -1,216 +1,242 @@
-import React, { useState } from 'react';
-import { Mail, User, Lock, CheckCircle, XCircle } from 'lucide-react'; // Using lucide-react for icons
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { useNavigate, Link } from 'react-router-dom';
+import validator from 'validator';
 
 const Register = () => {
   const [formData, setFormData] = useState({
-    username: '',
+    name: '',
     email: '',
     password: '',
-    confirmPassword: '',
+    confirmPassword: ''
   });
 
-  const [message, setMessage] = useState({ type: '', text: '' });
-  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: ''
+  });
 
-  // Handle input changes
-  const handleChange = (e) => {
+  const [message, setMessage] = useState({ text: '', type: '' });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [passwordStrength, setPasswordStrength] = useState('');
+  const navigate = useNavigate();
+
+  const { name, email, password, confirmPassword } = formData;
+
+  useEffect(() => {
+    if (password) {
+      const strength = 
+        password.length < 6 ? 'Weak' :
+        password.length < 10 ? 'Medium' : 'Strong';
+      setPasswordStrength(strength);
+    }
+  }, [password]);
+
+  const handleChange = e => {
     const { name, value } = e.target;
-    setFormData((prevData) => ({
-      ...prevData,
-      [name]: value,
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
     }));
+
+    if (message.text) setMessage({ text: '', type: '' });
+    if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
   };
 
-  // Handle form submission
-  const handleSubmit = async (e) => {
+  const validateForm = () => {
+    let isValid = true;
+    const newErrors = { name: '', email: '', password: '', confirmPassword: '' };
+
+    if (!name.trim()) {
+      newErrors.name = 'Name is required';
+      isValid = false;
+    }
+
+    if (!validator.isEmail(email)) {
+      newErrors.email = 'Invalid email address';
+      isValid = false;
+    }
+
+    if (password.length < 6) {
+      newErrors.password = 'Password must be at least 6 characters';
+      isValid = false;
+    }
+
+    if (password !== confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match';
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  };
+
+  const handleSubmit = async e => {
     e.preventDefault();
-    setMessage({ type: '', text: '' }); // Clear previous messages
-    setLoading(true);
 
-    // Basic client-side validation
-    if (!formData.username || !formData.email || !formData.password || !formData.confirmPassword) {
-      setMessage({ type: 'error', text: 'All fields are required.' });
-      setLoading(false);
-      return;
-    }
-
-    if (formData.password.length < 6) {
-      setMessage({ type: 'error', text: 'Password must be at least 6 characters long.' });
-      setLoading(false);
-      return;
-    }
-
-    if (formData.password !== formData.confirmPassword) {
-      setMessage({ type: 'error', text: 'Passwords do not match.' });
-      setLoading(false);
-      return;
-    }
-
-    // Prepare data to send (excluding confirmPassword)
-    const { confirmPassword, ...dataToSend } = formData;
+    if (!validateForm()) return;
+    setIsSubmitting(true);
 
     try {
-      // *** IMPORTANT: This is a placeholder for your backend API call. ***
-      // You will need a backend server (e.g., Node.js with Express)
-      // to securely handle user registration and interact with MongoDB.
-      // This client-side code CANNOT directly connect to MongoDB.
-      const response = await fetch('/api/register', { // Replace with your actual API endpoint
-        method: 'POST',
+      const config = {
         headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(dataToSend),
+          'Content-Type': 'application/json'
+        }
+      };
+
+      const payload = {
+        username: name.trim(),
+        email: email.trim().toLowerCase(),
+        password
+      };
+
+      const { data } = await axios.post(
+        'http://localhost:5000/api/auth/register', // 🔥 Hardcoded URL here
+        payload,
+        config
+      );
+
+      setMessage({
+        text: `Registration successful! Welcome ${data.user.name}`,
+        type: 'success'
       });
 
-      const result = await response.json();
+      setFormData({
+        name: '',
+        email: '',
+        password: '',
+        confirmPassword: ''
+      });
 
-      if (response.ok) {
-        setMessage({ type: 'success', text: result.message || 'Registration successful!' });
-        // Optionally clear form or redirect user
-        setFormData({
-          username: '',
-          email: '',
-          password: '',
-          confirmPassword: '',
-        });
-      } else {
-        setMessage({ type: 'error', text: result.message || 'Registration failed. Please try again.' });
-      }
+      setTimeout(() => navigate('/login'), 2000);
     } catch (error) {
       console.error('Registration error:', error);
-      setMessage({ type: 'error', text: 'An unexpected error occurred. Please try again later.' });
+
+      let errorMessage = 'Registration failed. Please try again.';
+
+      if (error.response?.data?.errors) {
+        const serverErrors = error.response.data.errors;
+        const newErrors = { ...errors };
+
+        serverErrors.forEach(err => {
+          if (err.path in newErrors) {
+            newErrors[err.path] = err.msg;
+          }
+        });
+
+        setErrors(newErrors);
+        errorMessage = 'Please fix the errors below';
+      } else {
+        errorMessage = error.response?.data?.error ||
+                       error.response?.data?.message ||
+                       errorMessage;
+      }
+
+      setMessage({ text: errorMessage, type: 'error' });
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8 font-sans antialiased">
-      <div className="max-w-md w-full bg-white rounded-2xl shadow-xl overflow-hidden p-8 border border-purple-200">
-        <h2 className="text-4xl font-extrabold text-center text-gray-900 mb-8">
-          Register with <span className="text-purple-700">Leap&Learn</span>
-        </h2>
-        <p className="text-center text-gray-600 mb-8">Create your account to start your learning journey!</p>
+    <div className="auth-container">
+      <h2 className="auth-title">Create Account</h2>
 
-        {message.text && (
-          <div className={`p-4 rounded-lg mb-6 flex items-center gap-3 ${
-            message.type === 'success' ? 'bg-green-100 text-green-700 border border-green-200' :
-            'bg-red-100 text-red-700 border border-red-200'
-          }`}>
-            {message.type === 'success' ? <CheckCircle className="w-5 h-5" /> : <XCircle className="w-5 h-5" />}
-            <p className="text-sm font-medium">{message.text}</p>
-          </div>
-        )}
+      {message.text && (
+        <div className={`alert ${message.type === 'error' ? 'alert-error' : 'alert-success'}`}>
+          {message.text}
+        </div>
+      )}
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label htmlFor="username" className="sr-only">Username</label>
-            <div className="relative rounded-md shadow-sm">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <User className="h-5 w-5 text-gray-400" aria-hidden="true" />
-              </div>
-              <input
-                id="username"
-                name="username"
-                type="text"
-                autoComplete="username"
-                required
-                className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm transition duration-150 ease-in-out"
-                placeholder="Username"
-                value={formData.username}
-                onChange={handleChange}
-              />
+      <form onSubmit={handleSubmit} className="auth-form" noValidate>
+        <div className="form-group">
+          <label htmlFor="name">Full Name</label>
+          <input
+            id="name"
+            type="text"
+            name="name"
+            value={name}
+            onChange={handleChange}
+            required
+            disabled={isSubmitting}
+            className={errors.name ? 'input-error' : ''}
+          />
+          {errors.name && <span className="error-message">{errors.name}</span>}
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="email">Email Address</label>
+          <input
+            id="email"
+            type="email"
+            name="email"
+            value={email}
+            onChange={handleChange}
+            required
+            disabled={isSubmitting}
+            className={errors.email ? 'input-error' : ''}
+          />
+          {errors.email && <span className="error-message">{errors.email}</span>}
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="password">Password</label>
+          <input
+            id="password"
+            type="password"
+            name="password"
+            value={password}
+            onChange={handleChange}
+            required
+            minLength={6}
+            disabled={isSubmitting}
+            className={errors.password ? 'input-error' : ''}
+          />
+          {password && (
+            <div className={`password-strength ${passwordStrength.toLowerCase()}`}>
+              Password Strength: {passwordStrength}
             </div>
-          </div>
+          )}
+          {errors.password && <span className="error-message">{errors.password}</span>}
+        </div>
 
-          <div>
-            <label htmlFor="email" className="sr-only">Email address</label>
-            <div className="relative rounded-md shadow-sm">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Mail className="h-5 w-5 text-gray-400" aria-hidden="true" />
-              </div>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm transition duration-150 ease-in-out"
-                placeholder="Email address"
-                value={formData.email}
-                onChange={handleChange}
-              />
-            </div>
-          </div>
+        <div className="form-group">
+          <label htmlFor="confirmPassword">Confirm Password</label>
+          <input
+            id="confirmPassword"
+            type="password"
+            name="confirmPassword"
+            value={confirmPassword}
+            onChange={handleChange}
+            required
+            minLength={6}
+            disabled={isSubmitting}
+            className={errors.confirmPassword ? 'input-error' : ''}
+          />
+          {errors.confirmPassword && (
+            <span className="error-message">{errors.confirmPassword}</span>
+          )}
+        </div>
 
-          <div>
-            <label htmlFor="password" className="sr-only">Password</label>
-            <div className="relative rounded-md shadow-sm">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Lock className="h-5 w-5 text-gray-400" aria-hidden="true" />
-              </div>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="new-password"
-                required
-                className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm transition duration-150 ease-in-out"
-                placeholder="Password"
-                value={formData.password}
-                onChange={handleChange}
-              />
-            </div>
-          </div>
+        <button
+          type="submit"
+          className={`auth-button ${isSubmitting ? 'submitting' : ''}`}
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? (
+            <>
+              <span className="spinner"></span>
+              Registering...
+            </>
+          ) : 'Register'}
+        </button>
+      </form>
 
-          <div>
-            <label htmlFor="confirmPassword" className="sr-only">Confirm Password</label>
-            <div className="relative rounded-md shadow-sm">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Lock className="h-5 w-5 text-gray-400" aria-hidden="true" />
-              </div>
-              <input
-                id="confirmPassword"
-                name="confirmPassword"
-                type="password"
-                autoComplete="new-password"
-                required
-                className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm transition duration-150 ease-in-out"
-                placeholder="Confirm Password"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-              />
-            </div>
-          </div>
-
-          <div>
-            <button
-              type="submit"
-              disabled={loading}
-              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-lg font-semibold rounded-lg text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition duration-300 ease-in-out transform hover:scale-105 shadow-md"
-            >
-              {loading ? (
-                <span className="flex items-center">
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Registering...
-                </span>
-              ) : (
-                'Register Account'
-              )}
-            </button>
-          </div>
-        </form>
-
-        <p className="mt-8 text-center text-sm text-gray-600">
-          Already have an account?{' '}
-          <a href="#" className="font-medium text-purple-600 hover:text-purple-500">
-            Sign In
-          </a>
-        </p>
-      </div>
+      <p className="auth-footer">
+        Already have an account? <Link to="/login">Sign in</Link>
+      </p>
     </div>
   );
 };
