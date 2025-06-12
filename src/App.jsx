@@ -1,6 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Navbar from "./components/Navbar";
-import Home from "./components/Home";
+import Home from "./components/Home/Home";
 import Course from "./components/course/course";
 import RecommendedJobs from "./components/RecommendJob";
 import Events from "./components/events/event";
@@ -8,6 +7,9 @@ import EventDetail from "./components/events/Eventdetail";
 import Footer from "./components/footer";
 import Login from "./components/login/login";
 import Register from "./components/register/register";
+import ChatApp from "./components/Chat/ChatApp";
+import RegisterCheckPage from "./components/course/components/registercheck";
+
 
 function App() {
   return (
@@ -36,9 +38,12 @@ function App() {
 
             {/* Regular routes (no protection) */}
             <Route path="/" element={<Home />} />
+            <Route path="/chat" element={< ChatApp/>} />
             <Route path="/courses" element={<Course />} />
             <Route path="/recommended-jobs" element={<RecommendedJobs />} />
             <Route path="/events" element={<Events />} />
+            <Route path="/register-check" element={<RegisterCheckPage/>} />
+            
             <Route path="/events/:eventId" element={<EventDetail />} />
           </Routes>
         </div>
