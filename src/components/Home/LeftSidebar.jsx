@@ -46,6 +46,9 @@ const LeftSidebar = ({ activeTab, upcomingEvents, handleAttendEvent }) => {
               { tab: 'courses', label: 'Learning', icon: FiBookOpen },
               { tab: 'recommended-jobs', label: 'Jobs', icon: FiBriefcase },
               { tab: 'network', label: 'Network', icon: FiUsers },
+              { tab: 'CV', label: 'CV', icon: FiUsers },
+              { tab: 'register-check', label: 'Verification', icon: FiUsers },
+              { tab: 'events', label: 'Events', icon: FiUsers },
             ].map(({ tab, label, icon: Icon }) => (
               <li key={tab}>
                 <NavLink

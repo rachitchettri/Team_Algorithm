@@ -247,10 +247,6 @@ IMPORTANT: Your response must be pure JSON with no additional text or markdown f
         <div className="space-y-6">
           {/* File Upload with drag & drop */}
           <div>
-            <label className="block mb-2 font-semibold flex items-center gap-2">
-              <FiUpload className="text-purple-600" />
-              Upload your CV (PDF only, max 5MB) or drag & drop here
-            </label>
             <div
               onDrop={onDrop}
               onDragOver={onDragOver}
