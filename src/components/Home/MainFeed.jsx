@@ -27,6 +27,8 @@ const MainFeed = ({
   handleDeleteComment
 }) => {
   return (
+    <div className=" w-150">
+
     <section className="flex-1">
       <CreatePost 
         showPostForm={showPostForm}
@@ -36,7 +38,7 @@ const MainFeed = ({
         newPostContent={newPostContent}
         setNewPostContent={setNewPostContent}
         handleCreatePost={handleCreatePost}
-      />
+        />
 
       <div className="space-y-6">
         {posts.map(post => (
@@ -57,10 +59,11 @@ const MainFeed = ({
             setEditedCommentContent={setEditedCommentContent}
             handleUpdateComment={handleUpdateComment}
             handleDeleteComment={handleDeleteComment}
-          />
-        ))}
+            />
+          ))}
       </div>
     </section>
+          </div>
   );
 };
 

@@ -9,14 +9,21 @@ const rl = readline.createInterface({
 
 const messages = [];
 
-const ask = () => {
-  rl.prompt();
-  rl.on('line', async (input) => {
-    if (input.toLowerCase() === 'exit') {
-      rl.close();
-      return;
-    }
+console.log('Start chatting with the assistant (type "exit" to quit):');
+rl.prompt();
 
+rl.on('line', async (input) => {
+  if (input.toLowerCase() === 'exit') {
+    rl.close();
+    return;
+  }
+
+  if (!input.trim()) {
+    rl.prompt();
+    return;
+  }
+
+  try {
     messages.push({ role: 'user', content: input });
 
     const stream = await streamChat(messages);
@@ -28,12 +35,11 @@ const ask = () => {
       process.stdout.write(token);
       assistantReply += token;
     }
-    console.log(); // new line after response
+    console.log();
     messages.push({ role: 'assistant', content: assistantReply });
+  } catch (err) {
+    console.error('\nError:', err.message || err);
+  }
 
-    rl.prompt();
-  });
-};
-
-console.log('Start chatting with the assistant (type "exit" to quit):');
-ask();
+  rl.prompt();
+});
