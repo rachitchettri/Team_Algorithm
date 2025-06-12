@@ -1,0 +1,24 @@
+[
+  {
+    "id": "prv-001",
+    "role": "provider",
+    "name": "Alex Johnson",
+    "email": "alex@techcorp.com",
+    "password": "$2a$10$hashedpassword789",
+    "companyName": "Tech Corp Inc.",
+    "companyAddress": "123 Business Ave, Tech City",
+    "companyLicense": "TC-789456",
+    "createdAt": "2023-10-10T08:00:00Z"
+  },
+  {
+    "id": "prv-002",
+    "role": "provider",
+    "name": "Sarah Williams",
+    "email": "sarah@devsolutions.com",
+    "password": "$2a$10$hashedpassword012",
+    "companyName": "Dev Solutions LLC",
+    "companyAddress": "456 Innovation St, Dev Town",
+    "companyLicense": "DS-123789",
+    "createdAt": "2023-10-12T11:30:00Z"
+  }
+]

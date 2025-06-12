@@ -14,11 +14,47 @@ import {
   Lightbulb,
   TrendingUp,
   BookOpen,
-  Star
+  Star,
+  Download
 } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
-import validator from 'validator';
-import axios from 'axios';
+ // Importing mock data for initial state
+// Mock data storage using in-memory arrays (simulating JSON files)
+let usersData = [];
+let providersData = [];
+
+// Utility functions to simulate JSON file operations
+const getUsersData = () => [...usersData];
+const getProvidersData = () => [...providersData];
+
+const saveUsersData = (users) => {
+  usersData = [...users];
+  // Download the JSON file for manual saving
+  downloadJSON(users, 'registerUser.json');
+};
+
+const saveProvidersData = (providers) => {
+  providersData = [...providers];
+  // Download the JSON file for manual saving
+  downloadJSON(providers, 'registerProvider.json');
+};
+
+const downloadJSON = (data, filename) => {
+  const jsonStr = JSON.stringify(data, null, 2);
+  const blob = new Blob([jsonStr], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+};
+
+const checkEmailExists = (email) => {
+  const allUsers = [...getUsersData(), ...getProvidersData()];
+  return allUsers.some(user => user.email === email);
+};
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -38,7 +74,6 @@ const Register = () => {
   const [passwordStrength, setPasswordStrength] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const navigate = useNavigate();
 
   const { role, name, email, password, confirmPassword, companyName, companyAddress, companyLicense } = formData;
 
@@ -72,7 +107,9 @@ const Register = () => {
       isValid = false;
     }
 
-    if (!validator.isEmail(email)) {
+    // Simple email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
       newErrors.email = 'Invalid email address';
       isValid = false;
     }
@@ -106,87 +143,54 @@ const Register = () => {
     return isValid;
   };
 
-  // const handleSubmit = async e => {
-  //   e.preventDefault();
-  //   if (!validateForm()) return;
-
-  //   setIsSubmitting(true);
-
-  //   try {
-  //     const payload = {
-  //       role,
-  //       username: name.trim(),
-  //       email: email.trim().toLowerCase(),
-  //       password,
-  //       ...(role === 'provider' && {
-  //         companyName,
-  //         companyAddress,
-  //         companyLicense
-  //       })
-  //     };
-
-  //     const { data } = await axios.post('http://localhost:5000/api/auth/register', payload);
-
-  //     setMessage({ text: `Welcome ${data.user.name}! Registration successful!`, type: 'success' });
-
-  //     setFormData({
-  //       role: 'finder',
-  //       name: '',
-  //       email: '',
-  //       password: '',
-  //       confirmPassword: '',
-  //       companyName: '',
-  //       companyAddress: '',
-  //       companyLicense: ''
-  //     });
-
-  //     setTimeout(() => navigate('/login'), 2000);
-  //   } catch (error) {
-  //     const newErrors = {};
-  //     if (error.response?.data?.errors) {
-  //       error.response.data.errors.forEach(err => {
-  //         newErrors[err.path] = err.msg;
-  //       });
-  //       setErrors(newErrors);
-  //       setMessage({ text: 'Please fix the errors below.', type: 'error' });
-  //     } else {
-  //       setMessage({
-  //         text: error.response?.data?.message || 'Registration failed. Please try again.',
-  //         type: 'error'
-  //       });
-  //     }
-  //   } finally {
-  //     setIsSubmitting(false);
-  //   }
-  // };
-
-  // Update the handleSubmit function in your Register component
-const handleSubmit = async e => {
+const handleSubmit = async (e) => {
   e.preventDefault();
   if (!validateForm()) return;
 
   setIsSubmitting(true);
 
   try {
-    const payload = {
+    const userData = {
       role,
-      username: name.trim(),
+      name: name.trim(),
       email: email.trim().toLowerCase(),
-      password,
+      password, // Remember to hash this in production
       ...(role === 'provider' && {
-        companyName,
-        companyAddress,
-        companyLicense
+        companyName: companyName.trim(),
+        companyAddress: companyAddress.trim(),
+        companyLicense: companyLicense.trim()
       })
     };
 
-    const { data } = await axios.post('http://localhost:5000/api/auth/register', payload);
+    const response = await fetch('/register', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(userData),
+    });
 
-    setMessage({ text: `Welcome ${data.user.username}! Registration successful!`, type: 'success' });
+    // First check if the response is OK
+    if (!response.ok) {
+      const errorData = await response.text(); // Try to read as text first
+      try {
+        // If it's JSON, parse it
+        const jsonError = JSON.parse(errorData);
+        throw new Error(jsonError.error || 'Registration failed');
+      } catch {
+        // If not JSON, use the raw text
+        throw new Error(errorData || 'Registration failed');
+      }
+    }
 
-    // Store token in local storage
-    localStorage.setItem('token', data.token);
-    
+    // If response is OK, parse as JSON
+    const data = await response.json();
+
+    setMessage({
+      text: `Welcome ${userData.name}! Registration successful as ${role}.`,
+      type: 'success',
+    });
+
     // Reset form
     setFormData({
       role: 'finder',
@@ -196,31 +200,27 @@ const handleSubmit = async e => {
       confirmPassword: '',
       companyName: '',
       companyAddress: '',
-      companyLicense: ''
+      companyLicense: '',
     });
 
-    // Redirect based on role
-    setTimeout(() => {
-      navigate(data.user.role === 'provider' ? '/provider/dashboard' : '/finder/dashboard');
-    }, 2000);
   } catch (error) {
-    const newErrors = {};
-    if (error.response?.data?.errors) {
-      error.response.data.errors.forEach(err => {
-        newErrors[err.path] = err.msg;
-      });
-      setErrors(newErrors);
-      setMessage({ text: 'Please fix the errors below.', type: 'error' });
-    } else {
-      setMessage({
-        text: error.response?.data?.message || 'Registration failed. Please try again.',
-        type: 'error'
-      });
-    }
+    setMessage({
+      text: error.message || 'Registration failed. Please try again.',
+      type: 'error',
+    });
   } finally {
     setIsSubmitting(false);
   }
 };
+
+  const handleDownloadData = () => {
+    if (usersData.length > 0) {
+      downloadJSON(usersData, 'registerUser.json');
+    }
+    if (providersData.length > 0) {
+      downloadJSON(providersData, 'registerProvider.json');
+    }
+  };
 
   return (
     <div className="min-h-screen w-full flex font-sans antialiased overflow-hidden">
@@ -271,6 +271,17 @@ const handleSubmit = async e => {
               </div>
             ))}
           </div>
+
+          {/* Download Button */}
+          {(usersData.length > 0 || providersData.length > 0) && (
+            <button
+              onClick={handleDownloadData}
+              className="mt-6 w-full flex items-center justify-center gap-2 p-3 bg-white/10 hover:bg-white/20 rounded-lg transition-all duration-200"
+            >
+              <Download className="w-4 h-4" />
+              Download JSON Files
+            </button>
+          )}
         </div>
       </div>
 
@@ -283,6 +294,13 @@ const handleSubmit = async e => {
             </h2>
             <p className="text-gray-600 text-sm sm:text-base">
               Join our learning community today
+            </p>
+          </div>
+
+          {/* Info Box */}
+          <div className="mb-6 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-sm text-blue-800">
+              <strong>Note:</strong> After registration, JSON files will automatically download. Save them to your project's public folder manually.
             </p>
           </div>
 
@@ -549,9 +567,9 @@ const handleSubmit = async e => {
 
           <p className="mt-6 text-center text-sm text-gray-600">
             Already have an account?{' '}
-            <Link to="/login" className="font-medium text-purple-600 hover:text-purple-500">
+            <span className="font-medium text-purple-600 hover:text-purple-500 cursor-pointer">
               Sign in
-            </Link>
+            </span>
           </p>
         </div>
       </div>
