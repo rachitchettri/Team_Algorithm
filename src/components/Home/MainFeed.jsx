@@ -27,7 +27,7 @@ const MainFeed = ({
   handleDeleteComment
 }) => {
   return (
-    <div className="lg:ml-80 w-150">
+    <div className=" w-150">
 
     <section className="flex-1">
       <CreatePost 

@@ -287,7 +287,7 @@ const RecommendedJobs = () => {
         </div>
 
         {/* Jobs Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 gap-6">
           {filteredJobs.map(job => (
             <div key={job.id} className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group border border-purple-100">
               {/* Job Image */}

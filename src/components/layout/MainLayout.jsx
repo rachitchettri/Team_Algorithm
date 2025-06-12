@@ -1,4 +1,3 @@
-// 
 import { Outlet } from 'react-router-dom';
 import Header from '../Home/Header';
 import LeftSidebar from '../Home/LeftSidebar';

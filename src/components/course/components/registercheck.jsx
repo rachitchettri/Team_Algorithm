@@ -1,41 +1,63 @@
 import React, { useState } from 'react';
-import { FaTimesCircle, FaPrint, FaDownload, FaLink, FaSearch } from 'react-icons/fa';
+import { FaTimesCircle, FaPrint, FaDownload, FaLink, FaSearch, FaFileContract } from 'react-icons/fa';
 import { motion } from 'framer-motion';
 
-const RegisterCheckPage = () => {
-  const [certificateNumber, setCertificateNumber] = useState('');
-  const [certificateData, setCertificateData] = useState(undefined);
-  const [showCertificate, setShowCertificate] = useState(false);
+const ContractVerificationPage = () => {
+  const [contractNumber, setContractNumber] = useState('');
+  const [contractData, setContractData] = useState(undefined);
+  const [showContract, setShowContract] = useState(false);
   const [copySuccess, setCopySuccess] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const mockCertificateDatabase = {
-    'CERT123': {
-      name: 'Rachit Chettri',
-      course: 'ReactJS Bootcamp',
-      date: 'June 01, 2025',
-      certId: 'CERT123',
+  const mockContractDatabase = {
+    'CONT789': {
+      contractId: 'CONT789',
+      companyName: 'TechSolutions Inc.',
+      clientName: 'Global Enterprises Ltd.',
+      contractType: 'Service Agreement',
+      startDate: 'January 15, 2025',
+      endDate: 'January 14, 2026',
+      value: '$250,000',
+      status: 'Active',
+      terms: [
+        '24/7 technical support',
+        'Monthly maintenance',
+        'Software updates',
+        'Emergency response within 4 hours'
+      ],
+      signatories: [
+        { name: 'John Smith', title: 'CEO, TechSolutions Inc.', date: 'Jan 10, 2025' },
+        { name: 'Sarah Johnson', title: 'CTO, Global Enterprises Ltd.', date: 'Jan 12, 2025' }
+      ]
     },
-    'CERT456': {
-      name: 'Anita Sharma',
-      course: 'Next.js Workshop',
-      date: 'June 03, 2025',
-      certId: 'CERT456',
-    },
-    'B22121': {
-      name: 'Bisesh Adhikari',
-      course: 'DevOps Certification',
-      date: 'May 08, 2025',
-      certId: 'B22121',
+    'CONT456': {
+      contractId: 'CONT456',
+      companyName: 'BuildRight Constructions',
+      clientName: 'Metro City Development',
+      contractType: 'Construction Agreement',
+      startDate: 'March 1, 2025',
+      endDate: 'December 31, 2026',
+      value: '$5,750,000',
+      status: 'Active',
+      terms: [
+        'Complete construction of commercial complex',
+        'Adherence to safety standards',
+        'Monthly progress reports',
+        'Liquidated damages for delays'
+      ],
+      signatories: [
+        { name: 'Robert Chen', title: 'President, BuildRight Constructions', date: 'Feb 25, 2025' },
+        { name: 'Michael Brown', title: 'Director, Metro City Development', date: 'Feb 28, 2025' }
+      ]
     }
   };
 
   const handleCheck = () => {
     setIsLoading(true);
     setTimeout(() => {
-      const data = mockCertificateDatabase[certificateNumber.toUpperCase()];
-      setCertificateData(data ?? null);
-      setShowCertificate(true);
+      const data = mockContractDatabase[contractNumber.toUpperCase()];
+      setContractData(data ?? null);
+      setShowContract(true);
       setCopySuccess('');
       setIsLoading(false);
     }, 800);
@@ -46,120 +68,124 @@ const RegisterCheckPage = () => {
     printWindow.document.write(`
       <html>
         <head>
-          <title>Certificate</title>
+          <title>Contract ${contractData.contractId}</title>
           <style>
             @page {
-              size: landscape;
+              size: A4;
               margin: 0;
             }
             body {
               margin: 0;
               padding: 0;
-              font-family: 'Georgia', serif;
+              font-family: 'Times New Roman', serif;
+            }
+            .watermark {
+              position: absolute;
+              opacity: 0.1;
+              font-size: 72px;
+              color: #000;
+              transform: rotate(-45deg);
+              z-index: -1;
+              white-space: nowrap;
             }
           </style>
         </head>
         <body>
           <div style="
-            width: 100vw;
-            height: 100vh;
-            background: linear-gradient(to right, #f8f9fa 1px, transparent 1px), 
-                        linear-gradient(to bottom, #f8f9fa 1px, transparent 1px);
-            background-size: 20px 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
+            width: 100%;
+            min-height: 100vh;
+            padding: 40px;
+            position: relative;
           ">
+            <div class="watermark" style="top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-45deg);">
+              ${contractData.status} CONTRACT
+            </div>
+            
             <div style="
-              width: 100%;
-              height: 90%;
-              border: 15px solid #4B5563;
+              border: 2px solid #000;
               padding: 40px;
+              height: 100%;
               position: relative;
-              background-color: white;
-              box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-              display: flex;
-              flex-direction: column;
             ">
-              <div style="
-                position: absolute;
-                top: 0;
-                left: 0;
-                right: 0;
-                height: 10px;
-                background: linear-gradient(90deg, #3B82F6, #10B981, #F59E0B);
-              "></div>
+              <div style="text-align: center; margin-bottom: 40px;">
+                <h1 style="font-size: 28px; font-weight: bold; margin-bottom: 10px;">
+                  ${contractData.companyName.toUpperCase()}
+                </h1>
+                <div style="
+                  height: 2px;
+                  background: linear-gradient(90deg, transparent, #000, transparent);
+                  margin: 0 auto 20px;
+                  width: 300px;
+                "></div>
+                <h2 style="font-size: 22px; font-weight: bold;">
+                  ${contractData.contractType.toUpperCase()}
+                </h2>
+              </div>
               
-              <div style="display: flex; flex-direction: column; height: 100%;">
-                <div style="text-align: center; flex: 1;">
-                  <div style="margin-bottom: 20px;">
-                    <img src="https://via.placeholder.com/150x80?text=Academy+Logo" 
-                         alt="Academy Logo" 
-                         style="height: 80px; margin-bottom: 20px;" />
-                    <h1 style="
-                      font-size: 36px;
-                      font-weight: bold;
-                      color: #1F2937;
-                      margin-bottom: 10px;
-                      letter-spacing: 2px;
-                    ">CERTIFICATE OF ACHIEVEMENT</h1>
-                    <div style="
-                      height: 2px;
-                      background: linear-gradient(90deg, transparent, #4B5563, transparent);
-                      margin: 20px auto;
-                      width: 300px;
-                    "></div>
-                    <p style="font-size: 16px; color: #6B7280;">This is to certify that</p>
-                  </div>
-                  
-                  <h2 style="
-                    font-size: 32px;
-                    font-weight: bold;
-                    color: #2563EB;
-                    margin: 20px 0;
-                    text-transform: uppercase;
-                    letter-spacing: 1px;
-                  ">${certificateData.name}</h2>
-                  
-                  <p style="font-size: 16px; color: #6B7280;">
-                    has successfully completed the course
-                  </p>
-                  
-                  <h3 style="
-                    font-size: 24px;
-                    font-weight: bold;
-                    color: #10B981;
-                    margin: 20px 0;
-                    font-style: italic;
-                  ">"${certificateData.course}"</h3>
-                  
-                  <p style="font-size: 16px; color: #6B7280;">
-                    with distinction on ${certificateData.date}
-                  </p>
-                </div>
+              <div style="margin-bottom: 30px;">
+                <p style="text-align: center; font-size: 16px; margin-bottom: 30px;">
+                  This Agreement is made and entered into as of ${contractData.startDate} by and between:
+                </p>
                 
-                <div style="display: flex; justify-content: space-between; margin-top: auto;">
+                <div style="display: flex; justify-content: space-around; margin-bottom: 30px;">
                   <div style="width: 45%;">
-                    <div style="
-                      border-top: 1px solid #9CA3AF;
-                      width: 200px;
-                      margin: 0 auto 10px;
-                      padding-top: 10px;
-                    "></div>
-                    <p style="font-size: 14px; color: #6B7280; text-align: center;">Director of Education</p>
+                    <h3 style="font-size: 18px; font-weight: bold; border-bottom: 1px solid #000; padding-bottom: 5px;">
+                      ${contractData.companyName}
+                    </h3>
+                    <p style="font-size: 14px; margin-top: 5px;">
+                      (Hereinafter referred to as "Service Provider")
+                    </p>
                   </div>
                   
                   <div style="width: 45%;">
-                    <div style="
-                      border-top: 1px solid #9CA3AF;
-                      width: 200px;
-                      margin: 0 auto 10px;
-                      padding-top: 10px;
-                    "></div>
-                    <p style="font-size: 14px; color: #6B7280; text-align: center;">Chief Executive Officer</p>
+                    <h3 style="font-size: 18px; font-weight: bold; border-bottom: 1px solid #000; padding-bottom: 5px;">
+                      ${contractData.clientName}
+                    </h3>
+                    <p style="font-size: 14px; margin-top: 5px;">
+                      (Hereinafter referred to as "Client")
+                    </p>
                   </div>
                 </div>
+              </div>
+              
+              <div style="margin-bottom: 30px;">
+                <h3 style="font-size: 18px; font-weight: bold; margin-bottom: 15px;">
+                  CONTRACT TERMS AND CONDITIONS
+                </h3>
+                
+                <ol style="padding-left: 20px; font-size: 14px;">
+                  ${contractData.terms.map((term, index) => `
+                    <li style="margin-bottom: 10px;">${term}</li>
+                  `).join('')}
+                </ol>
+              </div>
+              
+              <div style="margin-bottom: 40px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+                  <div>
+                    <p style="font-weight: bold;">Contract Value:</p>
+                    <p>${contractData.value}</p>
+                  </div>
+                  <div>
+                    <p style="font-weight: bold;">Contract Period:</p>
+                    <p>${contractData.startDate} to ${contractData.endDate}</p>
+                  </div>
+                  <div>
+                    <p style="font-weight: bold;">Status:</p>
+                    <p>${contractData.status}</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div style="display: flex; justify-content: space-around; margin-top: 60px;">
+                ${contractData.signatories.map(signatory => `
+                  <div style="width: 40%; text-align: center;">
+                    <div style="border-top: 1px solid #000; width: 100%; margin: 0 auto 10px; padding-top: 10px;"></div>
+                    <p style="font-weight: bold;">${signatory.name}</p>
+                    <p style="font-size: 14px;">${signatory.title}</p>
+                    <p style="font-size: 14px;">Date: ${signatory.date}</p>
+                  </div>
+                `).join('')}
               </div>
               
               <div style="
@@ -167,27 +193,9 @@ const RegisterCheckPage = () => {
                 bottom: 20px;
                 right: 40px;
                 font-size: 12px;
-                color: #9CA3AF;
+                color: #666;
               ">
-                Validated at: academy.org/verify/${certificateData.certId}
-              </div>
-              
-              <div style="
-                position: absolute;
-                bottom: 20px;
-                left: 40px;
-                border: 1px dashed #9CA3AF;
-                padding: 10px 20px;
-              ">
-                <p style="font-size: 14px; color: #6B7280; margin: 0; text-align: center;">Certificate ID</p>
-                <p style="
-                  font-size: 18px;
-                  font-weight: bold;
-                  color: #1F2937;
-                  letter-spacing: 2px;
-                  margin: 0;
-                  text-align: center;
-                ">${certificateData.certId}</p>
+                Contract ID: ${contractData.contractId}
               </div>
             </div>
           </div>
@@ -199,12 +207,11 @@ const RegisterCheckPage = () => {
   };
 
   const handleDownload = () => {
-    // In a real implementation, you would generate a PDF or image here
     alert('Download functionality would generate a PDF in a real implementation');
   };
 
   const handleCopyLink = () => {
-    const url = `${window.location.origin}/certificates/${certificateData.certId}`;
+    const url = `${window.location.origin}/contracts/${contractData.contractId}`;
     navigator.clipboard.writeText(url).then(() => {
       setCopySuccess('Verification link copied to clipboard!');
       setTimeout(() => setCopySuccess(''), 2000);
@@ -219,8 +226,8 @@ const RegisterCheckPage = () => {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-8"
         >
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">Certificate Verification</h1>
-          <p className="text-gray-600">Verify your digital certificates</p>
+          <h1 className="text-3xl font-bold text-gray-800 mb-2">Contract Verification</h1>
+          <p className="text-gray-600">Verify your business contracts</p>
         </motion.div>
 
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
@@ -231,9 +238,9 @@ const RegisterCheckPage = () => {
               </div>
               <input
                 type="text"
-                placeholder="Enter Certificate Number (e.g. CERT123)"
-                value={certificateNumber}
-                onChange={(e) => setCertificateNumber(e.target.value)}
+                placeholder="Enter Contract Number (e.g. CONT789)"
+                value={contractNumber}
+                onChange={(e) => setContractNumber(e.target.value)}
                 className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 onKeyPress={(e) => e.key === 'Enter' && handleCheck()}
               />
@@ -241,9 +248,9 @@ const RegisterCheckPage = () => {
 
             <button
               onClick={handleCheck}
-              disabled={!certificateNumber || isLoading}
+              disabled={!contractNumber || isLoading}
               className={`w-full mt-4 py-3 px-4 rounded-lg font-medium transition-all duration-300 flex items-center justify-center gap-2 ${
-                !certificateNumber || isLoading
+                !contractNumber || isLoading
                   ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                   : 'bg-blue-600 text-white hover:bg-blue-700 shadow-md hover:shadow-lg'
               }`}
@@ -258,13 +265,13 @@ const RegisterCheckPage = () => {
                 </>
               ) : (
                 <>
-                  <FaSearch /> Verify Certificate
+                  <FaFileContract /> Verify Contract
                 </>
               )}
             </button>
           </div>
 
-          {showCertificate && certificateData && (
+          {showContract && contractData && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -277,47 +284,72 @@ const RegisterCheckPage = () => {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-gray-800">Valid Certificate</h3>
-                  <p className="text-gray-600">This certificate is verified and authentic</p>
+                  <h3 className="text-xl font-bold text-gray-800">Valid Contract</h3>
+                  <p className="text-gray-600">This contract is verified and legally binding</p>
                 </div>
               </div>
 
-              <div className="bg-white border-4 border-gray-700 p-8 rounded-lg shadow-inner font-serif mb-6 aspect-[16/9] overflow-hidden">
-                <div className="h-full flex flex-col">
-                  <div className="flex-1 flex flex-col justify-center items-center text-center">
-                    <div className="mb-6">
-                      <div className="h-1 bg-gradient-to-r from-blue-500 via-green-500 to-yellow-500 mb-4"></div>
-                      <h1 className="text-3xl font-bold text-gray-800 mb-2 tracking-wider">CERTIFICATE OF ACHIEVEMENT</h1>
-                      <div className="h-px bg-gray-300 w-64 mx-auto my-4"></div>
-                      <p className="text-gray-600">This is to certify that</p>
-                    </div>
-                    
-                    <h2 className="text-2xl font-bold text-blue-600 my-4 uppercase tracking-wider">{certificateData.name}</h2>
-                    
-                    <p className="text-gray-600">has successfully completed the course</p>
-                    
-                    <h3 className="text-xl font-semibold text-green-600 my-4 italic">"{certificateData.course}"</h3>
-                    
-                    <p className="text-gray-600">with distinction on {certificateData.date}</p>
-                  </div>
+              <div className="bg-white border-2 border-gray-800 p-6 rounded-lg shadow-inner font-serif mb-6">
+                <div className="text-center mb-8">
+                  <h1 className="text-2xl font-bold uppercase mb-2">{contractData.companyName}</h1>
+                  <div className="h-px bg-gray-800 w-64 mx-auto my-4"></div>
+                  <h2 className="text-xl font-bold">{contractData.contractType}</h2>
+                </div>
+                
+                <div className="mb-6">
+                  <p className="text-center mb-4">
+                    This Agreement is made and entered into as of {contractData.startDate} by and between:
+                  </p>
                   
-                  <div className="flex justify-between items-end mt-auto">
-                    <div className="border border-dashed border-gray-400 p-3 rounded">
-                      <p className="text-sm text-gray-500">Certificate ID</p>
-                      <p className="text-lg font-bold text-gray-800 tracking-widest">{certificateData.certId}</p>
+                  <div className="flex flex-wrap justify-around mb-6">
+                    <div className="w-full md:w-5/12 mb-4 md:mb-0">
+                      <h3 className="font-bold border-b border-gray-800 pb-1">{contractData.companyName}</h3>
+                      <p className="text-sm">(Hereinafter referred to as "Service Provider")</p>
                     </div>
-                    
-                    <div className="flex gap-8">
-                      <div className="text-center">
-                        <div className="border-t border-gray-400 w-32 mx-auto pt-2"></div>
-                        <p className="text-sm text-gray-500">Director of Education</p>
-                      </div>
-                      <div className="text-center">
-                        <div className="border-t border-gray-400 w-32 mx-auto pt-2"></div>
-                        <p className="text-sm text-gray-500">Chief Executive Officer</p>
-                      </div>
+                    <div className="w-full md:w-5/12">
+                      <h3 className="font-bold border-b border-gray-800 pb-1">{contractData.clientName}</h3>
+                      <p className="text-sm">(Hereinafter referred to as "Client")</p>
                     </div>
                   </div>
+                </div>
+                
+                <div className="mb-8">
+                  <h3 className="font-bold text-lg mb-3">CONTRACT TERMS AND CONDITIONS</h3>
+                  <ol className="list-decimal pl-5 space-y-2">
+                    {contractData.terms.map((term, index) => (
+                      <li key={index}>{term}</li>
+                    ))}
+                  </ol>
+                </div>
+                
+                <div className="flex flex-wrap justify-between mb-8">
+                  <div>
+                    <p className="font-bold">Contract Value:</p>
+                    <p>{contractData.value}</p>
+                  </div>
+                  <div>
+                    <p className="font-bold">Contract Period:</p>
+                    <p>{contractData.startDate} to {contractData.endDate}</p>
+                  </div>
+                  <div>
+                    <p className="font-bold">Status:</p>
+                    <p>{contractData.status}</p>
+                  </div>
+                </div>
+                
+                <div className="flex flex-wrap justify-around mt-10">
+                  {contractData.signatories.map((signatory, index) => (
+                    <div key={index} className="w-full md:w-5/12 mb-6 text-center">
+                      <div className="border-t border-gray-800 w-full pt-2 mb-2"></div>
+                      <p className="font-bold">{signatory.name}</p>
+                      <p className="text-sm">{signatory.title}</p>
+                      <p className="text-sm">Date: {signatory.date}</p>
+                    </div>
+                  ))}
+                </div>
+                
+                <div className="text-right text-sm text-gray-600 mt-4">
+                  Contract ID: {contractData.contractId}
                 </div>
               </div>
 
@@ -328,7 +360,7 @@ const RegisterCheckPage = () => {
                   onClick={handlePrint}
                   className="flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 shadow-md"
                 >
-                  <FaPrint /> Print Certificate
+                  <FaPrint /> Print Contract
                 </motion.button>
                 <motion.button 
                   whileHover={{ scale: 1.05 }}
@@ -356,7 +388,7 @@ const RegisterCheckPage = () => {
             </motion.div>
           )}
 
-          {showCertificate && certificateData === null && (
+          {showContract && contractData === null && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -367,8 +399,8 @@ const RegisterCheckPage = () => {
                   <FaTimesCircle className="text-red-600 text-xl" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-gray-800">Certificate Not Found</h3>
-                  <p className="text-gray-600">No valid certificate matches the provided number</p>
+                  <h3 className="text-xl font-bold text-gray-800">Contract Not Found</h3>
+                  <p className="text-gray-600">No valid contract matches the provided number</p>
                 </div>
               </div>
             </motion.div>
@@ -379,4 +411,4 @@ const RegisterCheckPage = () => {
   );
 };
 
-export default RegisterCheckPage;
+export default ContractVerificationPage;

@@ -24,7 +24,18 @@ const mockSeekers = [
     education: "Information Technology",
     experience: "5 years",
     createdAt: "2023-10-16T10:15:00Z"
-  }
+  },
+    {
+    id: "skr-003",
+    role: "finder",
+    name: "John Doe",
+    email: "kushal@gmail.com",
+    password: "password123", // Note: In production, use hashed passwords
+    skills: ["JavaScript", "React", "Node.js"],
+    education: "Computer Science",
+    experience: "3 years",
+    createdAt: "2023-10-15T09:30:00Z"
+  },
 ];
 
 const Login = () => {
@@ -69,7 +80,6 @@ const Login = () => {
       // Don't store password in localStorage
     }));
 
-    alert(`Welcome back, ${matchedUser.name}!`);
     navigate('/'); // Redirect to dashboard
   };
 
@@ -82,14 +92,7 @@ const Login = () => {
         </p>
         
         {/* Demo credentials hint */}
-        <div className="mb-6 p-3 bg-blue-50 rounded-md">
-          <p className="text-sm text-blue-800">
-            <strong>Demo credentials:</strong><br />
-            Email: john.doe@example.com / jane.smith@example.com<br />
-            Password: password123 / password456
-          </p>
-        </div>
-
+        
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">

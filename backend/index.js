@@ -1,7 +1,6 @@
 import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
-import multer from 'multer';
 import path from 'path';
 import fs from 'fs'; // <-- IMPORTANT: add this
 import dotenv from 'dotenv';
@@ -98,19 +97,30 @@ app.post('/api/chat', async (req, res) => {
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
 
+    // Flush headers to establish SSE stream
+    res.flushHeaders();
+
     const responseStream = await groqStreamChat(messages);
 
     for await (const chunk of responseStream) {
       const text = chunk.choices?.[0]?.delta?.content || '';
       if (text) {
-        res.write(text);
+        res.write(`data: ${text}\n\n`);  // SSE format: each chunk prefixed by 'data:'
       }
     }
 
+    // Signal the end of the stream
+    res.write('data: [DONE]\n\n');
     res.end();
+
   } catch (err) {
     console.error('Chat streaming error:', err);
-    res.status(500).json({ error: 'Server error' });
+    // If headers already sent, cannot send JSON, so just close connection
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Server error' });
+    } else {
+      res.end();
+    }
   }
 });
 
