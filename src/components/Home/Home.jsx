@@ -425,17 +425,17 @@ const Home = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 font-sans text-gray-800">
+    <div className="min-h-screen  font-sans text-gray-800">
 
-      <Header 
+      {/* <Header 
         searchQuery={searchQuery} 
         setSearchQuery={setSearchQuery} 
         setShowMobileMenu={setShowMobileMenu} 
-      />
+      /> */}
 
       {/* Mobile Search - shown only on mobile */}
       <div className="lg:hidden bg-white p-4 shadow-sm border-b border-gray-200">
-        <div className="relative">
+        <div className="">
           <input
             type="text"
             placeholder="Search for jobs, courses, people..."
@@ -456,12 +456,12 @@ const Home = () => {
           handleAttendEvent={handleAttendEvent}
         />
 
-        <LeftSidebar 
+        {/* <LeftSidebar 
           activeTab={activeTab}
           setActiveTab={setActiveTab}
           upcomingEvents={upcomingEvents}
           handleAttendEvent={handleAttendEvent}
-        />
+        /> */}
 
         <MainFeed 
           showPostForm={showPostForm}
@@ -499,10 +499,10 @@ const Home = () => {
         />
       </main>
 
-      <MobileBottomNav 
+      {/* <MobileBottomNav 
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-      />
+      /> */}
       
     </div>
   );
