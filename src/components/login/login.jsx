@@ -72,7 +72,7 @@ const Login = () => {
   return (
     <div className="h-screen w-full flex font-sans antialiased overflow-hidden">
       {/* Left Side: Graphical/Promotional Content */}
-      <div className="hidden md:flex w-1/2 flex-col items-center justify-center p-8 bg-gradient-to-br from-purple-700 to-indigo-800 text-white relative overflow-hidden">
+      <div className="hidden md:flex w-1/2 flex-col rounded-4xl items-center justify-center p-8 bg-gradient-to-br from-purple-700 to-indigo-800 text-white relative overflow-hidden">
         {/* Decorative elements */}
         <div className="absolute -top-20 -left-20 w-64 h-64 bg-purple-600 rounded-full opacity-10 blur-xl"></div>
         <div className="absolute -bottom-32 -right-32 w-80 h-80 bg-indigo-600 rounded-full opacity-10 blur-xl"></div>
