@@ -1,12 +1,10 @@
 import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
-import multer from 'multer';
 import path from 'path';
 import dotenv from 'dotenv';
 import authRoutes from './routes/authRoutes.js';
 import { streamChat as groqStreamChat } from './services/chatService.js';
-
 
 dotenv.config();
 
@@ -17,7 +15,7 @@ app.use(cors());
 app.use(express.json());
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
-// MongoDB connection (same as before)
+// MongoDB connection
 const connectDB = async () => {
   try {
     await mongoose.connect(process.env.MONGO_URI);
@@ -29,16 +27,10 @@ const connectDB = async () => {
 };
 connectDB();
 
-// Your existing Mongoose Schema, Multer setup, routes here...
-// ...
-
-// Existing auth routes
+// Auth routes
 app.use('/api/auth', authRoutes);
 
-// Your existing application POST and GET routes here...
-// ...
-
-// Add your /api/chat streaming route here:
+// Chat streaming route
 app.post('/api/chat', async (req, res) => {
   try {
     const { messages } = req.body;
@@ -47,27 +39,36 @@ app.post('/api/chat', async (req, res) => {
       return res.status(400).json({ error: 'Messages are required and must be an array' });
     }
 
-    // Set headers for streaming response
+    // Set headers for SSE (Server-Sent Events) streaming
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
 
+    // Flush headers to establish SSE stream
+    res.flushHeaders();
+
     const responseStream = await groqStreamChat(messages);
 
-    // responseStream is assumed to be an async iterable of chunks
+    // Stream chunks from groqStreamChat to client
     for await (const chunk of responseStream) {
-      // Extract text from chunk (adjust based on actual structure)
       const text = chunk.choices?.[0]?.delta?.content || '';
       if (text) {
-        res.write(text);
+        res.write(`data: ${text}\n\n`);  // SSE format: each chunk prefixed by 'data:'
       }
     }
-    
 
+    // Signal the end of the stream
+    res.write('data: [DONE]\n\n');
     res.end();
+
   } catch (err) {
     console.error('Chat streaming error:', err);
-    res.status(500).json({ error: 'Server error' });
+    // If headers already sent, cannot send JSON, so just close connection
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Server error' });
+    } else {
+      res.end();
+    }
   }
 });
 

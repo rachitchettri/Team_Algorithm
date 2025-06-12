@@ -1,6 +1,9 @@
 import { FiSearch, FiBell, FiMessageSquare, FiBookOpen } from 'react-icons/fi';
+import { useNavigate } from 'react-router-dom';
 
-const Header = ({ searchQuery, setSearchQuery, setShowMobileMenu }) => {
+const Header = ({ user, searchQuery, setSearchQuery, setShowMobileMenu }) => {
+  const navigate = useNavigate();
+
   return (
     <header className="bg-white shadow-sm sticky top-0 z-50 border-b border-gray-200">
       <div className="container mx-auto px-4 py-3 flex items-center justify-between">
@@ -8,7 +11,9 @@ const Header = ({ searchQuery, setSearchQuery, setShowMobileMenu }) => {
           <div className="bg-gradient-to-r from-purple-600 to-indigo-600 p-2 rounded-lg">
             <FiBookOpen className="text-white text-2xl" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-800">Leap<span className="text-purple-600">&</span>Learn</h1>
+          <h1 className="text-2xl font-bold text-gray-800">
+            Leap<span className="text-purple-600">&</span>Learn
+          </h1>
         </div>
 
         <button
@@ -39,14 +44,22 @@ const Header = ({ searchQuery, setSearchQuery, setShowMobileMenu }) => {
           <button className="p-3 rounded-full hover:bg-gray-100 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-purple-300">
             <FiMessageSquare className="text-xl text-gray-600" />
           </button>
-          <div className="flex items-center space-x-3 cursor-pointer group">
-            <img
-              src="https://randomuser.me/api/portraits/men/75.jpg"
-              alt="Profile"
-              className="h-10 w-10 rounded-full object-cover border-2 border-gray-300 group-hover:border-purple-500 transition-all duration-200"
-            />
-            <span className="font-medium text-gray-700 group-hover:text-purple-600 transition-all duration-200">John Doe</span>
-          </div>
+
+          {user && (
+            <div
+              className="flex items-center space-x-3 cursor-pointer group"
+              onClick={() => navigate('/profile')}
+            >
+              <img
+                src={user.avatar}
+                alt="Profile"
+                className="h-10 w-10 rounded-full object-cover border-2 border-gray-300 group-hover:border-purple-500 transition-all duration-200"
+              />
+              <span className="font-medium text-gray-700 group-hover:text-purple-600 transition-all duration-200">
+                {user.name}
+              </span>
+            </div>
+          )}
         </div>
       </div>
     </header>

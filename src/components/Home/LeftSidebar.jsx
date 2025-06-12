@@ -1,8 +1,9 @@
 import { FiUsers, FiBookOpen, FiBriefcase } from 'react-icons/fi';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import Card from './Card';
 
 const LeftSidebar = ({ 
+  user,              // New prop: user object with name, avatar, role
   activeTab, 
   setActiveTab, 
   upcomingEvents,
@@ -15,18 +16,22 @@ const LeftSidebar = ({
     navigate(`/${tab}`);
   };
 
+  const userName = user?.name || 'Guest User';
+  const userAvatar = user?.avatar || 'https://via.placeholder.com/64?text=User';
+  const userRole = user?.role || 'Member';
+
   return (
     <aside className="hidden lg:block w-72 flex-shrink-0">
       <Card className="p-6 mb-6 sticky top-24">
         <div className="flex items-center space-x-4 mb-5">
           <img
-            src="https://randomuser.me/api/portraits/men/75.jpg"
+            src={userAvatar}
             alt="Profile"
             className="h-16 w-16 rounded-full object-cover border-3 border-purple-500 shadow-sm"
           />
           <div>
-            <h3 className="font-bold text-lg text-gray-800">John Doe</h3>
-            <p className="text-sm text-gray-600">Web Developer</p>
+            <h3 className="font-bold text-lg text-gray-800">{userName}</h3>
+            <p className="text-sm text-gray-600">{userRole}</p>
           </div>
         </div>
         <div className="border-t border-gray-200 pt-5">
