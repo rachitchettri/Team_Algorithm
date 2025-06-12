@@ -122,6 +122,8 @@ const Navbar = () => {
 
   return (
     <>
+    <div className="mb-16 md:mb-20 lg:mb-24">
+
       <nav
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
           scrolled 
@@ -176,7 +178,7 @@ const Navbar = () => {
                           : scrolled 
                             ? "text-purple-700 hover:bg-purple-50"
                             : "text-purple-100 hover:bg-purple-700 hover:bg-opacity-30"
-                      }`}
+                          }`}
                     >
                       {item.name}
                     </Link>
@@ -234,7 +236,7 @@ const Navbar = () => {
         <AnimatePresence>
           {isMenuOpen && (
             <motion.div
-              className="fixed inset-0 z-40 md:hidden"
+            className="fixed inset-0 z-40 md:hidden"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -247,7 +249,7 @@ const Navbar = () => {
                 exit="closed"
                 variants={menuVariants}
                 onClick={(e) => e.stopPropagation()}
-              >
+                >
                 <div className="flex flex-col h-full p-4">
                   <div className="flex items-center justify-between p-4 border-b border-purple-100">
                     <div className="flex items-center">
@@ -294,10 +296,10 @@ const Navbar = () => {
                             onClick={() => setIsMenuOpen(false)}
                             className={`block w-full py-2 px-3 rounded-lg ${
                               activeLink === item.route.substring(1) || (activeLink === 'home' && item.route === '/')
-                                ? "bg-purple-100 text-purple-800 font-medium"
-                                : "text-purple-700 hover:bg-purple-50"
+                              ? "bg-purple-100 text-purple-800 font-medium"
+                              : "text-purple-700 hover:bg-purple-50"
                             }`}
-                          >
+                            >
                             {item.name}
                           </Link>
                         )}
@@ -335,6 +337,37 @@ const Navbar = () => {
                           </Link>
                         </motion.div>
                       </>
+                    {!authLoading && (
+                      currentUser ? (
+                        <motion.button
+                          variants={itemVariants}
+                          onClick={handleLogout}
+                          className="w-full py-2 px-4 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition-colors shadow-md"
+                        >
+                          Logout
+                        </motion.button>
+                      ) : (
+                        <>
+                          <motion.div variants={itemVariants} className="mb-3">
+                            <Link
+                              to="/login"
+                              onClick={() => setIsMenuOpen(false)}
+                              className="block w-full py-2 px-4 bg-purple-600 text-white rounded-lg font-medium text-center hover:bg-purple-700 transition-colors shadow-md"
+                            >
+                              Login
+                            </Link>
+                          </motion.div>
+                          <motion.div variants={itemVariants}>
+                            <Link
+                              to="/register"
+                              onClick={() => setIsMenuOpen(false)}
+                              className="block w-full py-2 px-4 bg-white text-purple-700 border border-purple-300 rounded-lg font-medium text-center hover:bg-purple-50 transition-colors shadow-md"
+                              >
+                              Sign Up
+                            </Link>
+                          </motion.div>
+                        </>
+                      )
                     )}
                   </div>
                 </div>
@@ -363,6 +396,7 @@ const Navbar = () => {
           </motion.button>
         )}
       </AnimatePresence>
+            </div>
     </>
   );
 };
