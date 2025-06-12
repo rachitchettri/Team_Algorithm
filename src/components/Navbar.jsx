@@ -2,18 +2,21 @@ import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import PI from "../assets/images/logo.jpg";
 import { motion, AnimatePresence } from "framer-motion";
-import { useAuth } from "../components/Context/authContext";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [activeLink, setActiveLink] = useState("home");
   const [showBackToTop, setShowBackToTop] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
   const location = useLocation();
   const navigate = useNavigate();
-  const { currentUser, logout, loading: authLoading } = useAuth();
 
+  // Check for logged in user on component mount and when location changes
   useEffect(() => {
+    const user = localStorage.getItem('user') || sessionStorage.getItem('user');
+    setCurrentUser(user ? JSON.parse(user) : null);
+
     const handleScroll = () => {
       const scrollY = window.scrollY;
       setScrolled(scrollY > 10);
@@ -60,16 +63,23 @@ const Navbar = () => {
     setIsMenuOpen(false);
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem('user');
+    sessionStorage.removeItem('user');
+    setCurrentUser(null);
+    navigate('/login');
+  };
+
   const navItems = [
     { name: "Home", route: "/", section: "home" },
-    { name: "About", route: "/", section: "about" },
     { name: "Courses", route: "/courses" },
     { name: "Jobs", route: "/recommended-jobs" },
     { name: "Events", route: "/events" },
-    { name: "Gallery", route: "/", section: "gallery" },
-    { name: "Contact", route: "/", section: "contact" },
+    
+  
   ];
 
+  // Animation variants remain the same
   const menuVariants = {
     open: { 
       x: 0,
@@ -108,15 +118,6 @@ const Navbar = () => {
       x: 50,
       transition: { duration: 0.2 },
     },
-  };
-
-  const handleLogout = async () => {
-    try {
-      await logout();
-      navigate('/login');
-    } catch (error) {
-      console.error("Failed to logout:", error);
-    }
   };
 
   return (
@@ -183,30 +184,28 @@ const Navbar = () => {
                 </div>
               ))}
               
-              {!authLoading && (
-                currentUser ? (
-                  <button
-                    onClick={handleLogout}
-                    className="ml-2 px-4 py-2 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition-colors shadow-md"
+              {currentUser ? (
+                <button
+                  onClick={handleLogout}
+                  className="ml-2 px-4 py-2 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition-colors shadow-md"
+                >
+                  Logout
+                </button>
+              ) : (
+                <>
+                  <Link
+                    to="/login"
+                    className="ml-2 px-4 py-2 bg-white text-purple-700 rounded-lg font-medium hover:bg-purple-50 transition-colors shadow-md"
                   >
-                    Logout
-                  </button>
-                ) : (
-                  <>
-                    <Link
-                      to="/login"
-                      className="ml-2 px-4 py-2 bg-white text-purple-700 rounded-lg font-medium hover:bg-purple-50 transition-colors shadow-md"
-                    >
-                      Login
-                    </Link>
-                    <Link
-                      to="/register"
-                      className="ml-2 px-4 py-2 bg-purple-500 text-white rounded-lg font-medium hover:bg-purple-600 transition-colors shadow-md"
-                    >
-                      Sign Up
-                    </Link>
-                  </>
-                )
+                    Login
+                  </Link>
+                  <Link
+                    to="/register"
+                    className="ml-2 px-4 py-2 bg-purple-500 text-white rounded-lg font-medium hover:bg-purple-600 transition-colors shadow-md"
+                  >
+                    Sign Up
+                  </Link>
+                </>
               )}
             </div>
 
@@ -307,37 +306,35 @@ const Navbar = () => {
                   </div>
                   
                   <div className="p-4 border-t border-purple-100">
-                    {!authLoading && (
-                      currentUser ? (
-                        <motion.button
-                          variants={itemVariants}
-                          onClick={handleLogout}
-                          className="w-full py-2 px-4 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition-colors shadow-md"
-                        >
-                          Logout
-                        </motion.button>
-                      ) : (
-                        <>
-                          <motion.div variants={itemVariants} className="mb-3">
-                            <Link
-                              to="/login"
-                              onClick={() => setIsMenuOpen(false)}
-                              className="block w-full py-2 px-4 bg-purple-600 text-white rounded-lg font-medium text-center hover:bg-purple-700 transition-colors shadow-md"
-                            >
-                              Login
-                            </Link>
-                          </motion.div>
-                          <motion.div variants={itemVariants}>
-                            <Link
-                              to="/register"
-                              onClick={() => setIsMenuOpen(false)}
-                              className="block w-full py-2 px-4 bg-white text-purple-700 border border-purple-300 rounded-lg font-medium text-center hover:bg-purple-50 transition-colors shadow-md"
-                            >
-                              Sign Up
-                            </Link>
-                          </motion.div>
-                        </>
-                      )
+                    {currentUser ? (
+                      <motion.button
+                        variants={itemVariants}
+                        onClick={handleLogout}
+                        className="w-full py-2 px-4 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition-colors shadow-md"
+                      >
+                        Logout
+                      </motion.button>
+                    ) : (
+                      <>
+                        <motion.div variants={itemVariants} className="mb-3">
+                          <Link
+                            to="/login"
+                            onClick={() => setIsMenuOpen(false)}
+                            className="block w-full py-2 px-4 bg-purple-600 text-white rounded-lg font-medium text-center hover:bg-purple-700 transition-colors shadow-md"
+                          >
+                            Login
+                          </Link>
+                        </motion.div>
+                        <motion.div variants={itemVariants}>
+                          <Link
+                            to="/register"
+                            onClick={() => setIsMenuOpen(false)}
+                            className="block w-full py-2 px-4 bg-white text-purple-700 border border-purple-300 rounded-lg font-medium text-center hover:bg-purple-50 transition-colors shadow-md"
+                          >
+                            Sign Up
+                          </Link>
+                        </motion.div>
+                      </>
                     )}
                   </div>
                 </div>

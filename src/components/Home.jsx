@@ -3,7 +3,8 @@ import {
   FiSearch, FiBookOpen, FiBriefcase, FiUsers,
   FiBell, FiMessageSquare, FiUser, FiX,
   FiHeart, FiShare2, FiMessageCircle, FiPlus,
-  FiEdit, FiTrash2, FiSave, FiMoreHorizontal
+  FiEdit, FiTrash2, FiSave, FiMoreHorizontal,
+  FiCalendar, FiClock, FiMapPin, FiDollarSign
 } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 
@@ -14,7 +15,7 @@ const Home = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [newPostContent, setNewPostContent] = useState('');
-  const [posts, setPosts] = useState([]); // This will be loaded from localStorage
+  const [posts, setPosts] = useState([]);
   const [showPostForm, setShowPostForm] = useState(false);
   const [postType, setPostType] = useState('post');
 
@@ -26,6 +27,46 @@ const Home = () => {
 
   const [shareFeedback, setShareFeedback] = useState({});
 
+  // Color theme variables
+  const theme = {
+    primary: {
+      50: '#f5f3ff',
+      100: '#ede9fe',
+      200: '#ddd6fe',
+      300: '#c4b5fd',
+      400: '#a78bfa',
+      500: '#8b5cf6',
+      600: '#7c3aed',
+      700: '#6d28d9',
+      800: '#5b21b6',
+      900: '#4c1d95',
+    },
+    secondary: {
+      50: '#ecfdf5',
+      100: '#d1fae5',
+      200: '#a7f3d0',
+      300: '#6ee7b7',
+      400: '#34d399',
+      500: '#10b981',
+      600: '#059669',
+      700: '#047857',
+      800: '#065f46',
+      900: '#064e3b',
+    },
+    gray: {
+      50: '#f9fafb',
+      100: '#f3f4f6',
+      200: '#e5e7eb',
+      300: '#d1d5db',
+      400: '#9ca3af',
+      500: '#6b7280',
+      600: '#4b5563',
+      700: '#374151',
+      800: '#1f2937',
+      900: '#111827',
+    }
+  };
+
   // --- Persistence with localStorage ---
   useEffect(() => {
     const storedPosts = localStorage.getItem('eduConnectPosts');
@@ -33,7 +74,6 @@ const Home = () => {
       try {
         const parsedPosts = JSON.parse(storedPosts);
         setPosts(parsedPosts);
-        // Initialize newCommentContent and showComments states based on loaded posts
         const initialCommentContent = {};
         const initialShowComments = {};
         const initialShareFeedback = {};
@@ -46,21 +86,19 @@ const Home = () => {
         setShowComments(initialShowComments);
         setShareFeedback(initialShareFeedback);
       } catch (e) {
-        console.error("Failed to parse stored posts from localStorage:", e);
-        // If parsing fails, reset to initial mock data
+        console.error("Failed to parse stored posts:", e);
         initializeMockData();
       }
     } else {
       initializeMockData();
     }
-  }, []); // Run only once on component mount
+  }, []);
 
-  // Effect to save posts to localStorage whenever the posts state changes
   useEffect(() => {
-    if (posts.length > 0) { // Only save if there are posts
+    if (posts.length > 0) {
       localStorage.setItem('eduConnectPosts', JSON.stringify(posts));
     }
-  }, [posts]); // Depend on 'posts' state
+  }, [posts]);
 
   const initializeMockData = () => {
     const initialPosts = [
@@ -139,8 +177,6 @@ const Home = () => {
     });
     setShareFeedback(initialShareFeedback);
   };
-  // --- End Persistence with localStorage ---
-
 
   const recommendedJobs = [
     {
@@ -207,6 +243,7 @@ const Home = () => {
       id: 1,
       name: 'David Kim',
       title: 'Product Manager',
+      avatar: 'https://randomuser.me/api/portraits/men/22.jpg',
       mutualConnections: 5,
       connected: false
     },
@@ -214,6 +251,7 @@ const Home = () => {
       id: 2,
       name: 'Sarah Chen',
       title: 'Data Scientist',
+      avatar: 'https://randomuser.me/api/portraits/women/33.jpg',
       mutualConnections: 3,
       connected: false
     },
@@ -221,6 +259,7 @@ const Home = () => {
       id: 3,
       name: 'Michael Rodriguez',
       title: 'DevOps Engineer',
+      avatar: 'https://randomuser.me/api/portraits/men/44.jpg',
       mutualConnections: 7,
       connected: false
     }
@@ -362,13 +401,12 @@ const Home = () => {
   };
 
   const handleSharePost = useCallback(async (postId, content) => {
-    // Check if the Web Share API is available (for native sharing)
     if (navigator.share) {
       try {
         await navigator.share({
           title: 'EduConnect Post',
           text: content,
-          url: window.location.href, // You might want a specific URL for the post
+          url: window.location.href,
         });
         setShareFeedback(prev => ({ ...prev, [postId]: 'Shared!' }));
         setTimeout(() => {
@@ -376,8 +414,7 @@ const Home = () => {
         }, 2000);
       } catch (error) {
         if (error.name === 'AbortError') {
-          // User dismissed the share dialog
-          setShareFeedback(prev => ({ ...prev, [postId]: '' })); // Clear feedback without showing an error
+          setShareFeedback(prev => ({ ...prev, [postId]: '' }));
         } else {
           setShareFeedback(prev => ({ ...prev, [postId]: 'Share failed!' }));
           setTimeout(() => {
@@ -387,7 +424,6 @@ const Home = () => {
         }
       }
     } else if (navigator.clipboard) {
-      // Fallback to Copy to Clipboard
       try {
         await navigator.clipboard.writeText(content);
         setShareFeedback(prev => ({ ...prev, [postId]: 'Copied!' }));
@@ -402,7 +438,6 @@ const Home = () => {
         console.error('Failed to copy text: ', err);
       }
     } else {
-      // Very old browser, no clipboard or share API
       setShareFeedback(prev => ({ ...prev, [postId]: 'Not supported!' }));
       setTimeout(() => {
         setShareFeedback(prev => ({ ...prev, [postId]: '' }));
@@ -426,24 +461,32 @@ const Home = () => {
     console.log(`Enrolled in course ${courseId}`);
   };
 
-  // Function to navigate to recommended jobs page
   const handleSeeAllJobs = () => {
     navigate('/recommended-jobs');
   };
 
+  // Card component for consistent styling
+  const Card = ({ children, className = '' }) => (
+    <div className={`bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden ${className}`}>
+      {children}
+    </div>
+  );
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-purple-100 to-purple-200 font-sans text-gray-800">
+    <div className="min-h-screen bg-gray-50 font-sans text-gray-800">
       {/* Header */}
-      <header className="bg-gradient-to-r from-purple-700 to-purple-900 text-white shadow-lg sticky top-0 z-50">
+      <header className="bg-white shadow-sm sticky top-0 z-50 border-b border-gray-200">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <FiBookOpen className="text-3xl text-purple-200" />
-            <h1 className="text-2xl font-extrabold tracking-wide">Leap&Learn</h1>
+            <div className="bg-gradient-to-r from-purple-600 to-indigo-600 p-2 rounded-lg">
+              <FiBookOpen className="text-white text-2xl" />
+            </div>
+            <h1 className="text-2xl font-bold text-gray-800">Leap<span className="text-purple-600">&</span>Learn</h1>
           </div>
 
           {/* Mobile menu button */}
           <button
-            className="lg:hidden p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-300 transition-all duration-200 hover:bg-purple-800"
+            className="lg:hidden p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-300 transition-all duration-200 hover:bg-gray-100"
             onClick={() => setShowMobileMenu(!showMobileMenu)}
           >
             <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -459,49 +502,49 @@ const Home = () => {
             <input
               type="text"
               placeholder="Search for jobs, courses, people..."
-              className="w-full py-2 px-5 pr-12 rounded-full bg-purple-100 text-purple-900 placeholder-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-300 transition-all duration-200"
+              className="w-full py-2 px-5 pr-12 rounded-full bg-gray-100 text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-300 transition-all duration-200"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
-            <FiSearch className="absolute right-4 top-1/2 -translate-y-1/2 text-purple-500 text-xl" />
+            <FiSearch className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 text-xl" />
           </div>
 
           <div className="hidden lg:flex items-center space-x-6">
-            <button className="p-3 rounded-full hover:bg-purple-800 relative transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-purple-300">
-              <FiBell className="text-xl" />
-              <span className="absolute top-1 right-1 h-3 w-3 rounded-full bg-red-400 border-2 border-purple-700 animate-pulse"></span>
+            <button className="p-3 rounded-full hover:bg-gray-100 relative transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-purple-300">
+              <FiBell className="text-xl text-gray-600" />
+              <span className="absolute top-1 right-1 h-3 w-3 rounded-full bg-red-500 border-2 border-white animate-pulse"></span>
             </button>
-            <button className="p-3 rounded-full hover:bg-purple-800 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-purple-300">
-              <FiMessageSquare className="text-xl" />
+            <button className="p-3 rounded-full hover:bg-gray-100 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-purple-300">
+              <FiMessageSquare className="text-xl text-gray-600" />
             </button>
             <div className="flex items-center space-x-3 cursor-pointer group">
               <img
                 src="https://randomuser.me/api/portraits/men/75.jpg"
                 alt="Profile"
-                className="h-10 w-10 rounded-full object-cover border-2 border-purple-300 group-hover:border-purple-100 transition-all duration-200"
+                className="h-10 w-10 rounded-full object-cover border-2 border-gray-300 group-hover:border-purple-500 transition-all duration-200"
               />
-              <span className="font-medium text-lg group-hover:text-purple-200 transition-all duration-200">John Doe</span>
+              <span className="font-medium text-gray-700 group-hover:text-purple-600 transition-all duration-200">John Doe</span>
             </div>
           </div>
         </div>
       </header>
 
       {/* Mobile Search - shown only on mobile */}
-      <div className="lg:hidden bg-purple-700 p-4 shadow-md">
+      <div className="lg:hidden bg-white p-4 shadow-sm border-b border-gray-200">
         <div className="relative">
           <input
             type="text"
             placeholder="Search for jobs, courses, people..."
-            className="w-full py-2 px-5 pr-12 rounded-full bg-purple-100 text-purple-900 placeholder-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-300"
+            className="w-full py-2 px-5 pr-12 rounded-full bg-gray-100 text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-300"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
-          <FiSearch className="absolute right-4 top-1/2 -translate-y-1/2 text-purple-500 text-xl" />
+          <FiSearch className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 text-xl" />
         </div>
       </div>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8 flex flex-col lg:flex-row gap-8">
+      <main className="container mx-auto px-4 py-8 flex flex-col lg:flex-row gap-6">
         {/* Mobile Menu Overlay */}
         {showMobileMenu && (
           <div className="fixed inset-0 bg-black bg-opacity-60 z-40 lg:hidden" onClick={() => setShowMobileMenu(false)}></div>
@@ -509,10 +552,10 @@ const Home = () => {
 
         {/* Left Sidebar - Mobile */}
         <aside className={`fixed top-0 left-0 h-full w-72 bg-white z-50 transform transition-transform duration-300 ease-in-out lg:hidden ${showMobileMenu ? 'translate-x-0 shadow-xl' : '-translate-x-full'}`}>
-          <div className="p-5 flex justify-between items-center border-b border-purple-100 bg-purple-700 text-white">
-            <h2 className="text-xl font-bold">Menu</h2>
-            <button onClick={() => setShowMobileMenu(false)} className="p-2 rounded-full hover:bg-purple-600 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-purple-300">
-              <FiX className="text-2xl" />
+          <div className="p-5 flex justify-between items-center border-b border-gray-200 bg-white">
+            <h2 className="text-xl font-bold text-gray-800">Menu</h2>
+            <button onClick={() => setShowMobileMenu(false)} className="p-2 rounded-full hover:bg-gray-100 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-purple-300">
+              <FiX className="text-2xl text-gray-600" />
             </button>
           </div>
           <div className="p-5">
@@ -520,11 +563,11 @@ const Home = () => {
               <img
                 src="https://randomuser.me/api/portraits/men/75.jpg"
                 alt="Profile"
-                className="h-14 w-14 rounded-full object-cover border-2 border-purple-300"
+                className="h-14 w-14 rounded-full object-cover border-2 border-purple-500"
               />
               <div>
-                <h3 className="font-semibold text-lg text-purple-800">John Doe</h3>
-                <p className="text-sm text-purple-600">Web Developer</p>
+                <h3 className="font-semibold text-lg text-gray-800">John Doe</h3>
+                <p className="text-sm text-gray-600">Web Developer</p>
               </div>
             </div>
             <nav className="mb-8">
@@ -532,7 +575,7 @@ const Home = () => {
                 <li>
                   <button
                     onClick={() => { setActiveTab('feed'); setShowMobileMenu(false); }}
-                    className={`w-full text-left px-4 py-3 rounded-lg flex items-center space-x-3 transition-all duration-200 ${activeTab === 'feed' ? 'bg-purple-100 text-purple-800 font-bold shadow-sm' : 'text-gray-700 hover:bg-purple-50 hover:text-purple-700'}`}
+                    className={`w-full text-left px-4 py-3 rounded-lg flex items-center space-x-3 transition-all duration-200 ${activeTab === 'feed' ? 'bg-purple-100 text-purple-700 font-semibold' : 'text-gray-700 hover:bg-gray-100 hover:text-purple-700'}`}
                   >
                     <FiUsers className="text-xl" />
                     <span>My Feed</span>
@@ -541,7 +584,7 @@ const Home = () => {
                 <li>
                   <button
                     onClick={() => { setActiveTab('learning'); setShowMobileMenu(false); }}
-                    className={`w-full text-left px-4 py-3 rounded-lg flex items-center space-x-3 transition-all duration-200 ${activeTab === 'learning' ? 'bg-purple-100 text-purple-800 font-bold shadow-sm' : 'text-gray-700 hover:bg-purple-50 hover:text-purple-700'}`}
+                    className={`w-full text-left px-4 py-3 rounded-lg flex items-center space-x-3 transition-all duration-200 ${activeTab === 'learning' ? 'bg-purple-100 text-purple-700 font-semibold' : 'text-gray-700 hover:bg-gray-100 hover:text-purple-700'}`}
                   >
                     <FiBookOpen className="text-xl" />
                     <span>Learning</span>
@@ -550,7 +593,7 @@ const Home = () => {
                 <li>
                   <button
                     onClick={() => { setActiveTab('jobs'); setShowMobileMenu(false); }}
-                    className={`w-full text-left px-4 py-3 rounded-lg flex items-center space-x-3 transition-all duration-200 ${activeTab === 'jobs' ? 'bg-purple-100 text-purple-800 font-bold shadow-sm' : 'text-gray-700 hover:bg-purple-50 hover:text-purple-700'}`}
+                    className={`w-full text-left px-4 py-3 rounded-lg flex items-center space-x-3 transition-all duration-200 ${activeTab === 'jobs' ? 'bg-purple-100 text-purple-700 font-semibold' : 'text-gray-700 hover:bg-gray-100 hover:text-purple-700'}`}
                   >
                     <FiBriefcase className="text-xl" />
                     <span>Jobs</span>
@@ -559,7 +602,7 @@ const Home = () => {
                 <li>
                   <button
                     onClick={() => { setActiveTab('network'); setShowMobileMenu(false); }}
-                    className={`w-full text-left px-4 py-3 rounded-lg flex items-center space-x-3 transition-all duration-200 ${activeTab === 'network' ? 'bg-purple-100 text-purple-800 font-bold shadow-sm' : 'text-gray-700 hover:bg-purple-50 hover:text-purple-700'}`}
+                    className={`w-full text-left px-4 py-3 rounded-lg flex items-center space-x-3 transition-all duration-200 ${activeTab === 'network' ? 'bg-purple-100 text-purple-700 font-semibold' : 'text-gray-700 hover:bg-gray-100 hover:text-purple-700'}`}
                   >
                     <FiUsers className="text-xl" />
                     <span>Network</span>
@@ -568,21 +611,34 @@ const Home = () => {
               </ul>
             </nav>
 
-            <div className="border-t border-purple-100 pt-6">
-              <h3 className="font-bold text-purple-800 mb-4 text-lg">Upcoming Events</h3>
+            <div className="border-t border-gray-200 pt-6">
+              <h3 className="font-bold text-gray-800 mb-4 text-lg">Upcoming Events</h3>
               <div className="space-y-4">
                 {upcomingEvents.map(event => (
-                  <div key={event.id} className="border-l-4 border-purple-500 pl-4 py-2 bg-purple-50 rounded-r-lg shadow-sm">
-                    <h4 className="font-semibold text-gray-800">{event.title}</h4>
-                    <p className="text-sm text-gray-600">{event.date} • {event.time}</p>
-                    <p className="text-sm text-purple-600">{event.location}</p>
-                    <button
-                      onClick={() => handleAttendEvent(event.id)}
-                      className="mt-2 text-sm text-purple-700 font-medium hover:underline hover:text-purple-900 transition-colors duration-200"
-                    >
-                      {event.attending ? 'Cancel RSVP' : 'RSVP'}
-                    </button>
-                  </div>
+                  <Card key={event.id} className="p-4 hover:shadow-md transition-shadow duration-200">
+                    <div className="flex items-start space-x-3">
+                      <div className="bg-purple-100 p-2 rounded-lg text-purple-700">
+                        <FiCalendar className="text-xl" />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-gray-800">{event.title}</h4>
+                        <div className="flex items-center space-x-2 text-sm text-gray-600 mt-1">
+                          <FiClock className="text-gray-500" />
+                          <span>{event.date} • {event.time}</span>
+                        </div>
+                        <div className="flex items-center space-x-2 text-sm text-gray-600 mt-1">
+                          <FiMapPin className="text-gray-500" />
+                          <span>{event.location}</span>
+                        </div>
+                        <button
+                          onClick={() => handleAttendEvent(event.id)}
+                          className={`mt-3 text-sm font-medium px-4 py-1.5 rounded-full ${event.attending ? 'bg-purple-100 text-purple-700' : 'bg-purple-600 text-white hover:bg-purple-700'} transition-colors duration-200`}
+                        >
+                          {event.attending ? 'Cancel RSVP' : 'RSVP'}
+                        </button>
+                      </div>
+                    </div>
+                  </Card>
                 ))}
               </div>
             </div>
@@ -591,108 +647,119 @@ const Home = () => {
 
         {/* Left Sidebar - Desktop */}
         <aside className="hidden lg:block w-72 flex-shrink-0">
-          <div className="bg-white rounded-xl shadow-lg p-6 mb-6 sticky top-24 border border-purple-100">
+          <Card className="p-6 mb-6 sticky top-24">
             <div className="flex items-center space-x-4 mb-5">
               <img
                 src="https://randomuser.me/api/portraits/men/75.jpg"
                 alt="Profile"
-                className="h-16 w-16 rounded-full object-cover border-3 border-purple-400 shadow-md"
+                className="h-16 w-16 rounded-full object-cover border-3 border-purple-500 shadow-sm"
               />
               <div>
-                <h3 className="font-bold text-xl text-purple-800">John Doe</h3>
-                <p className="text-sm text-purple-600">Web Developer</p>
+                <h3 className="font-bold text-lg text-gray-800">John Doe</h3>
+                <p className="text-sm text-gray-600">Web Developer</p>
               </div>
             </div>
-            <div className="border-t border-purple-100 pt-5">
+            <div className="border-t border-gray-200 pt-5">
               <p className="text-base text-gray-600 flex justify-between mb-2">
                 <span>Profile completeness</span>
-                <span className="font-semibold text-purple-700">75%</span>
+                <span className="font-semibold text-purple-600">75%</span>
               </p>
-              <div className="w-full bg-purple-200 rounded-full h-2.5">
+              <div className="w-full bg-gray-200 rounded-full h-2.5">
                 <div className="bg-purple-600 h-2.5 rounded-full" style={{ width: '75%' }}></div>
               </div>
+              <button className="w-full mt-4 bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-lg font-medium transition-colors duration-200">
+                Complete Profile
+              </button>
             </div>
-          </div>
+          </Card>
 
-          <nav className="bg-white rounded-xl shadow-lg p-6 sticky top-[240px] border border-purple-100">
-            <ul className="space-y-3">
-              <li>
-                <button
-                  onClick={() => setActiveTab('feed')}
-                  className={`w-full text-left px-4 py-3 rounded-lg flex items-center space-x-3 transition-all duration-200 ${activeTab === 'feed' ? 'bg-purple-100 text-purple-800 font-bold shadow-sm' : 'text-gray-700 hover:bg-purple-50 hover:text-purple-700'}`}
-                >
-                  <FiUsers className="text-xl" />
-                  <span>My Feed</span>
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => setActiveTab('learning')}
-                  className={`w-full text-left px-4 py-3 rounded-lg flex items-center space-x-3 transition-all duration-200 ${activeTab === 'learning' ? 'bg-purple-100 text-purple-800 font-bold shadow-sm' : 'text-gray-700 hover:bg-purple-50 hover:text-purple-700'}`}
-                >
-                  <FiBookOpen className="text-xl" />
-                  <span>Learning</span>
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => setActiveTab('jobs')}
-                  className={`w-full text-left px-4 py-3 rounded-lg flex items-center space-x-3 transition-all duration-200 ${activeTab === 'jobs' ? 'bg-purple-100 text-purple-800 font-bold shadow-sm' : 'text-gray-700 hover:bg-purple-50 hover:text-purple-700'}`}
-                >
-                  <FiBriefcase className="text-xl" />
-                  <span>Jobs</span>
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => setActiveTab('network')}
-                  className={`w-full text-left px-4 py-3 rounded-lg flex items-center space-x-3 transition-all duration-200 ${activeTab === 'network' ? 'bg-purple-100 text-purple-800 font-bold shadow-sm' : 'text-gray-700 hover:bg-purple-50 hover:text-purple-700'}`}
-                >
-                  <FiUsers className="text-xl" />
-                  <span>Network</span>
-                </button>
-              </li>
-            </ul>
-          </nav>
+          <Card className="p-6 sticky top-[240px]">
+            <nav>
+              <ul className="space-y-2">
+                <li>
+                  <button
+                    onClick={() => setActiveTab('feed')}
+                    className={`w-full text-left px-4 py-3 rounded-lg flex items-center space-x-3 transition-all duration-200 ${activeTab === 'feed' ? 'bg-purple-100 text-purple-700 font-semibold' : 'text-gray-700 hover:bg-gray-100 hover:text-purple-700'}`}
+                  >
+                    <FiUsers className="text-xl" />
+                    <span>My Feed</span>
+                  </button>
+                </li>
+                <li>
+                  <button
+                    onClick={() => setActiveTab('learning')}
+                    className={`w-full text-left px-4 py-3 rounded-lg flex items-center space-x-3 transition-all duration-200 ${activeTab === 'learning' ? 'bg-purple-100 text-purple-700 font-semibold' : 'text-gray-700 hover:bg-gray-100 hover:text-purple-700'}`}
+                  >
+                    <FiBookOpen className="text-xl" />
+                    <span>Learning</span>
+                  </button>
+                </li>
+                <li>
+                  <button
+                    onClick={() => setActiveTab('jobs')}
+                    className={`w-full text-left px-4 py-3 rounded-lg flex items-center space-x-3 transition-all duration-200 ${activeTab === 'jobs' ? 'bg-purple-100 text-purple-700 font-semibold' : 'text-gray-700 hover:bg-gray-100 hover:text-purple-700'}`}
+                  >
+                    <FiBriefcase className="text-xl" />
+                    <span>Jobs</span>
+                  </button>
+                </li>
+                <li>
+                  <button
+                    onClick={() => setActiveTab('network')}
+                    className={`w-full text-left px-4 py-3 rounded-lg flex items-center space-x-3 transition-all duration-200 ${activeTab === 'network' ? 'bg-purple-100 text-purple-700 font-semibold' : 'text-gray-700 hover:bg-gray-100 hover:text-purple-700'}`}
+                  >
+                    <FiUsers className="text-xl" />
+                    <span>Network</span>
+                  </button>
+                </li>
+              </ul>
+            </nav>
+          </Card>
 
-          <div className="bg-white rounded-xl shadow-lg p-6 mt-6 sticky top-[500px] border border-purple-100">
-            <h3 className="font-bold text-purple-800 mb-4 text-lg">Upcoming Events</h3>
+          <Card className="p-6 mt-6 sticky top-[500px]">
+            <h3 className="font-bold text-gray-800 mb-4 text-lg">Upcoming Events</h3>
             <div className="space-y-4">
               {upcomingEvents.map(event => (
-                <div key={event.id} className="border-l-4 border-purple-500 pl-4 py-2 bg-purple-50 rounded-r-lg shadow-sm">
+                <div key={event.id} className="border-l-4 border-purple-500 pl-4 py-2 bg-purple-50 rounded-r-lg">
                   <h4 className="font-semibold text-gray-800">{event.title}</h4>
-                  <p className="text-sm text-gray-600">{event.date} • {event.time}</p>
-                  <p className="text-sm text-purple-600">{event.location}</p>
+                  <div className="flex items-center space-x-2 text-sm text-gray-600 mt-1">
+                    <FiClock className="text-gray-500" />
+                    <span>{event.date} • {event.time}</span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-sm text-gray-600 mt-1">
+                    <FiMapPin className="text-gray-500" />
+                    <span>{event.location}</span>
+                  </div>
                   <button
                     onClick={() => handleAttendEvent(event.id)}
-                    className="mt-2 text-sm text-purple-700 font-medium hover:underline hover:text-purple-900 transition-colors duration-200"
+                    className={`mt-3 text-sm font-medium px-4 py-1.5 rounded-full ${event.attending ? 'bg-purple-100 text-purple-700' : 'bg-purple-600 text-white hover:bg-purple-700'} transition-colors duration-200`}
                   >
                     {event.attending ? 'Cancel RSVP' : 'RSVP'}
                   </button>
                 </div>
               ))}
             </div>
-            <button className="mt-4 text-sm text-purple-700 font-semibold hover:underline hover:text-purple-900 transition-colors duration-200">
+            <button className="mt-4 text-sm text-purple-600 font-semibold hover:underline hover:text-purple-800 transition-colors duration-200">
               See all events
             </button>
-          </div>
+          </Card>
         </aside>
 
         {/* Main Feed */}
         <section className="flex-1">
           {/* Create Post */}
-          <div className="bg-white rounded-xl shadow-lg p-6 mb-6 border border-purple-100">
+          <Card className="p-6 mb-6">
             {showPostForm ? (
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <h3 className="font-bold text-lg text-purple-800">Create {postType === 'post' ? 'Post' : postType.charAt(0).toUpperCase() + postType.slice(1)}</h3>
+                  <h3 className="font-bold text-lg text-gray-800">Create {postType === 'post' ? 'Post' : postType.charAt(0).toUpperCase() + postType.slice(1)}</h3>
                   <button onClick={() => setShowPostForm(false)} className="p-2 rounded-full text-gray-500 hover:bg-gray-100 transition-all duration-200">
                     <FiX className="text-xl" />
                   </button>
                 </div>
                 <textarea
                   placeholder={`What's on your mind, ${postType} an update, article, or opportunity...?`}
-                  className="w-full p-4 border border-purple-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-200 resize-y min-h-[100px]"
+                  className="w-full p-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-200 resize-y min-h-[100px]"
                   rows={4}
                   value={newPostContent}
                   onChange={(e) => setNewPostContent(e.target.value)}
@@ -701,26 +768,26 @@ const Home = () => {
                   <div className="flex flex-wrap gap-2">
                     <button
                       onClick={() => setPostType('post')}
-                      className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${postType === 'post' ? 'bg-purple-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                      className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${postType === 'post' ? 'bg-purple-600 text-white shadow-sm' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
                     >
                       Post
                     </button>
                     <button
                       onClick={() => setPostType('learning')}
-                      className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${postType === 'learning' ? 'bg-purple-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                      className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${postType === 'learning' ? 'bg-purple-600 text-white shadow-sm' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
                     >
                       Learning
                     </button>
                     <button
                       onClick={() => setPostType('job')}
-                      className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${postType === 'job' ? 'bg-purple-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                      className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${postType === 'job' ? 'bg-purple-600 text-white shadow-sm' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
                     >
                       Job
                     </button>
                   </div>
                   <button
                     onClick={handleCreatePost}
-                    className="bg-purple-700 hover:bg-purple-800 text-white px-6 py-2 rounded-full font-semibold shadow-md transition-all duration-200 flex items-center space-x-2"
+                    className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg font-semibold shadow-sm transition-all duration-200 flex items-center space-x-2"
                   >
                     <FiPlus />
                     <span>Create</span>
@@ -733,11 +800,11 @@ const Home = () => {
                   <img
                     src="https://randomuser.me/api/portraits/men/75.jpg"
                     alt="Your avatar"
-                    className="h-12 w-12 rounded-full object-cover border-2 border-purple-300"
+                    className="h-12 w-12 rounded-full object-cover border-2 border-purple-500"
                   />
                   <button
                     onClick={() => setShowPostForm(true)}
-                    className="flex-1 text-left bg-purple-50 text-gray-600 px-5 py-3 rounded-full hover:bg-purple-100 transition-all duration-200 shadow-sm border border-purple-100"
+                    className="flex-1 text-left bg-gray-100 text-gray-600 px-5 py-3 rounded-full hover:bg-gray-200 transition-all duration-200"
                   >
                     Share an update, article, or opportunity...
                   </button>
@@ -745,21 +812,21 @@ const Home = () => {
                 <div className="flex justify-around text-base">
                   <button
                     onClick={() => { setPostType('learning'); setShowPostForm(true); }}
-                    className="flex items-center space-x-2 text-gray-600 hover:text-purple-700 px-4 py-2 rounded-lg hover:bg-purple-50 transition-all duration-200"
+                    className="flex items-center space-x-2 text-gray-600 hover:text-purple-700 px-4 py-2 rounded-lg hover:bg-gray-100 transition-all duration-200"
                   >
                     <FiBookOpen className="text-xl" />
                     <span className="hidden sm:inline">Learning</span>
                   </button>
                   <button
                     onClick={() => { setPostType('job'); setShowPostForm(true); }}
-                    className="flex items-center space-x-2 text-gray-600 hover:text-purple-700 px-4 py-2 rounded-lg hover:bg-purple-50 transition-all duration-200"
+                    className="flex items-center space-x-2 text-gray-600 hover:text-purple-700 px-4 py-2 rounded-lg hover:bg-gray-100 transition-all duration-200"
                   >
                     <FiBriefcase className="text-xl" />
                     <span className="hidden sm:inline">Job</span>
                   </button>
                   <button
                     onClick={() => { setPostType('event'); setShowPostForm(true); }}
-                    className="flex items-center space-x-2 text-gray-600 hover:text-purple-700 px-4 py-2 rounded-lg hover:bg-purple-50 transition-all duration-200"
+                    className="flex items-center space-x-2 text-gray-600 hover:text-purple-700 px-4 py-2 rounded-lg hover:bg-gray-100 transition-all duration-200"
                   >
                     <FiUsers className="text-xl" />
                     <span className="hidden sm:inline">Event</span>
@@ -767,12 +834,12 @@ const Home = () => {
                 </div>
               </>
             )}
-          </div>
+          </Card>
 
           {/* Posts */}
           <div className="space-y-6">
             {posts.map(post => (
-              <div key={post.id} className="bg-white rounded-xl shadow-lg p-6 border border-purple-100 animate-fade-in">
+              <Card key={post.id} className="p-6">
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center space-x-4">
                     <img
@@ -781,7 +848,7 @@ const Home = () => {
                       className="h-14 w-14 rounded-full object-cover border-2 border-purple-300"
                     />
                     <div>
-                      <h3 className="font-bold text-lg text-purple-800">{post.user.name}</h3>
+                      <h3 className="font-bold text-lg text-gray-800">{post.user.name}</h3>
                       <p className="text-sm text-gray-500">{post.user.title} • {post.time}</p>
                     </div>
                   </div>
@@ -799,7 +866,7 @@ const Home = () => {
                     ))}
                   </div>
                 )}
-                <div className="flex items-center justify-between text-sm text-gray-500 border-t border-b border-purple-100 py-3 my-4">
+                <div className="flex items-center justify-between text-sm text-gray-500 border-t border-b border-gray-200 py-3 my-4">
                   <span className="font-medium">{post.likes} likes</span>
                   <button onClick={() => toggleComments(post.id)} className="hover:underline hover:text-purple-700 transition-colors duration-200">
                     {post.comments} comments • {post.shares} shares
@@ -808,14 +875,14 @@ const Home = () => {
                 <div className="flex justify-between pt-2">
                   <button
                     onClick={() => handleLikePost(post.id)}
-                    className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-200 ${post.liked ? 'text-purple-700 bg-purple-50 font-semibold' : 'text-gray-600 hover:text-purple-700 hover:bg-purple-50'}`}
+                    className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-200 ${post.liked ? 'text-purple-700 bg-purple-50 font-semibold' : 'text-gray-600 hover:text-purple-700 hover:bg-gray-100'}`}
                   >
-                    <FiHeart className={`${post.liked ? 'fill-current' : ''} text-xl`} />
+                    <FiHeart className={`${post.liked ? 'fill-current text-purple-700' : 'text-gray-600'} text-xl`} />
                     <span>Like</span>
                   </button>
                   <button
                     onClick={() => toggleComments(post.id)}
-                    className="flex items-center space-x-2 text-gray-600 hover:text-purple-700 px-4 py-2 rounded-lg hover:bg-purple-50 transition-all duration-200"
+                    className="flex items-center space-x-2 text-gray-600 hover:text-purple-700 px-4 py-2 rounded-lg hover:bg-gray-100 transition-all duration-200"
                   >
                     <FiMessageCircle className="text-xl" />
                     <span>Comment</span>
@@ -823,7 +890,7 @@ const Home = () => {
                   <div className="relative">
                     <button
                       onClick={() => handleSharePost(post.id, post.content)}
-                      className="flex items-center space-x-2 text-gray-600 hover:text-purple-700 px-4 py-2 rounded-lg hover:bg-purple-50 transition-all duration-200"
+                      className="flex items-center space-x-2 text-gray-600 hover:text-purple-700 px-4 py-2 rounded-lg hover:bg-gray-100 transition-all duration-200"
                     >
                       <FiShare2 className="text-xl" />
                       <span>Share</span>
@@ -838,14 +905,14 @@ const Home = () => {
 
                 {/* Comments Section */}
                 {showComments[post.id] && (
-                  <div className="mt-6 border-t border-purple-100 pt-6">
-                    <h5 className="font-bold text-lg text-purple-800 mb-4">Comments ({post.comments})</h5>
+                  <div className="mt-6 border-t border-gray-200 pt-6">
+                    <h5 className="font-bold text-lg text-gray-800 mb-4">Comments ({post.comments})</h5>
                     <div className="space-y-4 mb-5">
                       {post.commentsList.length === 0 ? (
-                        <p className="text-sm text-gray-500 p-3 bg-purple-50 rounded-lg italic">No comments yet. Be the first to comment!</p>
+                        <p className="text-sm text-gray-500 p-3 bg-gray-100 rounded-lg italic">No comments yet. Be the first to comment!</p>
                       ) : (
                         post.commentsList.map(comment => (
-                          <div key={comment.id} className="flex items-start space-x-4 bg-purple-50 p-4 rounded-lg shadow-sm">
+                          <div key={comment.id} className="flex items-start space-x-4 bg-gray-50 p-4 rounded-lg">
                             <img
                               src={comment.user.avatar}
                               alt={comment.user.name}
@@ -856,14 +923,13 @@ const Home = () => {
                                 <span className="font-semibold text-gray-800">{comment.user.name}</span>
                                 <span className="text-xs text-gray-500">• {comment.time}</span>
                               </div>
-                              {/* Conditional rendering for editing */}
                               {editingCommentId === comment.id && comment.user.name === 'You' ? (
                                 <div className="flex flex-col sm:flex-row items-start sm:items-center mt-2 space-y-2 sm:space-y-0 sm:space-x-2">
                                   <input
                                     type="text"
                                     value={editedCommentContent}
                                     onChange={(e) => setEditedCommentContent(e.target.value)}
-                                    className="flex-1 w-full p-2 border border-purple-300 rounded-md focus:outline-none focus:ring-1 focus:ring-purple-500 text-sm"
+                                    className="flex-1 w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-purple-500 text-sm"
                                     onKeyPress={(e) => {
                                         if (e.key === 'Enter') {
                                             handleUpdateComment(post.id, comment.id);
@@ -890,7 +956,6 @@ const Home = () => {
                               ) : (
                                 <p className="text-sm text-gray-700">{comment.content}</p>
                               )}
-                              {/* Edit and Delete buttons for 'You' */}
                               {comment.user.name === 'You' && editingCommentId !== comment.id && (
                                 <div className="flex space-x-3 mt-2">
                                   <button
@@ -924,7 +989,7 @@ const Home = () => {
                       <input
                         type="text"
                         placeholder="Add a comment..."
-                        className="flex-1 p-3 border border-purple-200 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-200"
+                        className="flex-1 p-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-200"
                         value={newCommentContent[post.id] || ''}
                         onChange={(e) => setNewCommentContent(prev => ({ ...prev, [post.id]: e.target.value }))}
                         onKeyPress={(e) => {
@@ -935,7 +1000,7 @@ const Home = () => {
                       />
                       <button
                         onClick={() => handleAddComment(post.id)}
-                        className="bg-purple-600 hover:bg-purple-700 text-white p-3 rounded-full shadow-md transition-all duration-200"
+                        className="bg-purple-600 hover:bg-purple-700 text-white p-3 rounded-full shadow-sm transition-all duration-200"
                         aria-label="Add comment"
                       >
                         <FiPlus className="text-xl" />
@@ -943,7 +1008,7 @@ const Home = () => {
                     </div>
                   </div>
                 )}
-              </div>
+              </Card>
             ))}
           </div>
         </section>
@@ -951,19 +1016,19 @@ const Home = () => {
         {/* Right Sidebar */}
         <aside className="hidden lg:block w-80 flex-shrink-0">
           {/* Recommended Jobs */}
-          <div className="bg-white rounded-xl shadow-lg p-6 mb-6 sticky top-24 border border-purple-100">
+          <Card className="p-6 mb-6 sticky top-24">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-bold text-lg text-purple-800">Recommended Jobs</h3>
+              <h3 className="font-bold text-lg text-gray-800">Recommended Jobs</h3>
               <button
-                onClick={handleSeeAllJobs} // Add onClick handler
-                className="text-sm text-purple-700 font-semibold hover:underline hover:text-purple-900 transition-colors duration-200"
+                onClick={handleSeeAllJobs}
+                className="text-sm text-purple-600 font-semibold hover:underline hover:text-purple-800 transition-colors duration-200"
               >
                 See all
               </button>
             </div>
             <div className="space-y-4">
               {recommendedJobs.map(job => (
-                <div key={job.id} className="border border-purple-100 rounded-lg p-4 hover:border-purple-300 cursor-pointer group transition-all duration-200 bg-purple-50 shadow-sm">
+                <div key={job.id} className="border border-gray-200 rounded-lg p-4 hover:border-purple-300 cursor-pointer group transition-all duration-200 hover:shadow-sm">
                   <div className="flex justify-between items-start">
                     <h4 className="font-semibold text-gray-800 group-hover:text-purple-700 transition-colors duration-200 text-base">{job.title}</h4>
                     <button
@@ -977,29 +1042,32 @@ const Home = () => {
                   </div>
                   <p className="text-sm text-gray-600 mb-1">{job.company} • {job.location}</p>
                   <div className="flex items-center space-x-2 text-xs mb-2">
-                    <span className="bg-purple-200 text-purple-800 px-2.5 py-1 rounded-full font-medium">{job.type}</span>
-                    <span className="text-gray-600 font-medium">{job.salary}</span>
+                    <span className="bg-purple-100 text-purple-700 px-2.5 py-1 rounded-full font-medium">{job.type}</span>
+                    <div className="flex items-center space-x-1 text-gray-600 font-medium">
+                      <FiDollarSign className="text-gray-500" />
+                      <span>{job.salary}</span>
+                    </div>
                   </div>
                   <p className="text-xs text-gray-400">{job.posted}</p>
                 </div>
               ))}
             </div>
-          </div>
+          </Card>
 
           {/* Suggested Connections */}
-          <div className="bg-white rounded-xl shadow-lg p-6 sticky top-[500px] border border-purple-100">
+          <Card className="p-6 sticky top-[500px]">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-bold text-lg text-purple-800">Suggested Connections</h3>
-              <button className="text-sm text-purple-700 font-semibold hover:underline hover:text-purple-900 transition-colors duration-200">See all</button>
+              <h3 className="font-bold text-lg text-gray-800">Suggested Connections</h3>
+              <button className="text-sm text-purple-600 font-semibold hover:underline hover:text-purple-800 transition-colors duration-200">See all</button>
             </div>
             <div className="space-y-4">
               {suggestedConnections.map(connection => (
-                <div key={connection.id} className="flex items-center justify-between bg-purple-50 p-3 rounded-lg shadow-sm">
+                <div key={connection.id} className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-colors duration-200">
                   <div className="flex items-center space-x-3">
                     <img
-                        src="https://randomuser.me/api/portraits/men/76.jpg" // Placeholder for connection avatar
-                        alt={connection.name}
-                        className="h-12 w-12 rounded-full object-cover border-2 border-purple-300"
+                      src={connection.avatar}
+                      alt={connection.name}
+                      className="h-12 w-12 rounded-full object-cover border-2 border-purple-300"
                     />
                     <div>
                       <h4 className="font-semibold text-gray-800">{connection.name}</h4>
@@ -1009,7 +1077,7 @@ const Home = () => {
                   </div>
                   <button
                     onClick={() => handleConnect(connection.id)}
-                    className={`p-2 rounded-full transition-all duration-200 ${connection.connected ? 'bg-purple-200 text-purple-800' : 'text-purple-700 hover:bg-purple-100'}`}
+                    className={`p-2 rounded-full transition-all duration-200 ${connection.connected ? 'bg-purple-100 text-purple-700' : 'text-purple-700 hover:bg-purple-100'}`}
                   >
                     {connection.connected ? (
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
@@ -1022,23 +1090,23 @@ const Home = () => {
                 </div>
               ))}
             </div>
-          </div>
+          </Card>
 
           {/* Learning Recommendations */}
-          <div className="bg-white rounded-xl shadow-lg p-6 mt-6 sticky top-[800px] border border-purple-100">
-            <h3 className="font-bold text-lg text-purple-800 mb-4">Learning Recommendations</h3>
+          <Card className="p-6 mt-6 sticky top-[800px]">
+            <h3 className="font-bold text-lg text-gray-800 mb-4">Learning Recommendations</h3>
             <div className="space-y-4">
               {learningRecommendations.map(item => (
-                <div key={item.id} className="flex items-start space-x-4 bg-purple-50 p-3 rounded-lg shadow-sm">
-                  <div className="h-14 w-14 rounded-md bg-purple-100 flex items-center justify-center flex-shrink-0">
-                    <FiBookOpen className="text-purple-700 text-2xl" />
+                <div key={item.id} className="flex items-start space-x-4 p-3 hover:bg-gray-50 rounded-lg transition-colors duration-200">
+                  <div className="h-14 w-14 rounded-md bg-purple-100 flex items-center justify-center flex-shrink-0 text-purple-700">
+                    <FiBookOpen className="text-2xl" />
                   </div>
                   <div>
                     <h4 className="font-semibold text-gray-800">{item.title}</h4>
                     <p className="text-sm text-gray-500">{item.type} • {item.duration}</p>
                     <button
                       onClick={() => item.type === 'Course' ? handleEnroll(item.id) : console.log(`Read ${item.id}`)}
-                      className="mt-2 text-sm text-purple-700 font-medium hover:underline hover:text-purple-900 transition-colors duration-200"
+                      className={`mt-2 text-sm font-medium px-4 py-1.5 rounded-full ${item.type === 'Course' ? (item.enrolled ? 'bg-purple-100 text-purple-700' : 'bg-purple-600 text-white hover:bg-purple-700') : (item.read ? 'bg-purple-100 text-purple-700' : 'bg-purple-600 text-white hover:bg-purple-700')} transition-colors duration-200`}
                     >
                       {item.type === 'Course' ? (item.enrolled ? 'Enrolled' : 'Enroll now') : (item.read ? 'Read' : 'Read now')}
                     </button>
@@ -1046,12 +1114,12 @@ const Home = () => {
                 </div>
               ))}
             </div>
-          </div>
+          </Card>
         </aside>
       </main>
 
       {/* Mobile Bottom Navigation */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white shadow-lg border-t border-purple-100 z-50">
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white shadow-lg border-t border-gray-200 z-50">
         <div className="flex justify-around items-center py-2">
           <button
             onClick={() => setActiveTab('feed')}
