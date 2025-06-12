@@ -337,37 +337,6 @@ const Navbar = () => {
                           </Link>
                         </motion.div>
                       </>
-                    {!authLoading && (
-                      currentUser ? (
-                        <motion.button
-                          variants={itemVariants}
-                          onClick={handleLogout}
-                          className="w-full py-2 px-4 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition-colors shadow-md"
-                        >
-                          Logout
-                        </motion.button>
-                      ) : (
-                        <>
-                          <motion.div variants={itemVariants} className="mb-3">
-                            <Link
-                              to="/login"
-                              onClick={() => setIsMenuOpen(false)}
-                              className="block w-full py-2 px-4 bg-purple-600 text-white rounded-lg font-medium text-center hover:bg-purple-700 transition-colors shadow-md"
-                            >
-                              Login
-                            </Link>
-                          </motion.div>
-                          <motion.div variants={itemVariants}>
-                            <Link
-                              to="/register"
-                              onClick={() => setIsMenuOpen(false)}
-                              className="block w-full py-2 px-4 bg-white text-purple-700 border border-purple-300 rounded-lg font-medium text-center hover:bg-purple-50 transition-colors shadow-md"
-                              >
-                              Sign Up
-                            </Link>
-                          </motion.div>
-                        </>
-                      )
                     )}
                   </div>
                 </div>
